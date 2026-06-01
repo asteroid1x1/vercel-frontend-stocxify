@@ -14,6 +14,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(adminCookieNames.accessToken)?.value;
   const deviceId = cookieStore.get(adminCookieNames.deviceId)?.value;
+  const refreshToken = cookieStore.get(adminCookieNames.refreshToken)?.value;
 
   if (accessToken && deviceId) {
     await signedBackendFetch({
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       method: "POST",
       accessToken,
       deviceId,
+      body: refreshToken ? { refresh_token: refreshToken } : undefined,
     }).catch(() => undefined);
   }
 

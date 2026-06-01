@@ -53,7 +53,7 @@ export function AdminLoginPage() {
         return;
       }
 
-      router.push("/admin");
+      router.replace("/admin");
     } catch {
       setError("Unable to reach the auth service.");
     } finally {

@@ -100,6 +100,27 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+input[data-slot="input-group-control"]:-webkit-autofill,
+input[data-slot="input-group-control"]:-webkit-autofill:hover,
+input[data-slot="input-group-control"]:-webkit-autofill:focus,
+input[data-slot="input-group-control"]:-webkit-autofill:active {
+  background-color: var(--background) !important;
+  background-image: none !important;
+  box-shadow: 0 0 0 1000px var(--background) inset !important;
+  -webkit-box-shadow: 0 0 0 1000px var(--background) inset !important;
+  -webkit-text-fill-color: var(--foreground) !important;
+  caret-color: var(--foreground) !important;
+  transition: background-color 9999s ease-out;
+}
+
+input[data-slot="input-group-control"] {
+  background-color: var(--background);
+}
+
 .reveal {
   opacity: 0;
   transform: translateY(28px);

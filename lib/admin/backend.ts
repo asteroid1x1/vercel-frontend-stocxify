@@ -1,7 +1,5 @@
 import "server-only";
 
-import { randomUUID } from "node:crypto";
-
 import { buildSignedHeaders } from "@/lib/auth/signRequest";
 
 const defaultTimeoutMs = Number(process.env.BACKEND_FETCH_TIMEOUT_MS ?? 10_000);
@@ -9,8 +7,8 @@ const defaultTimeoutMs = Number(process.env.BACKEND_FETCH_TIMEOUT_MS ?? 10_000);
 function getBackendUrl(envName: "AUTH_SERVICE_URL" | "USER_SERVICE_URL", fallback: string) {
   const value = process.env[envName];
 
-  if (!value && process.env.NODE_ENV === "production") {
-    throw new Error(`${envName} is required in production.`);
+  if (!value && process.env.NODE_ENV !== "development") {
+    throw new Error(`${envName} is required outside of development.`);
   }
 
   return value ?? fallback;
@@ -26,8 +24,10 @@ export const backendUrls = {
 };
 
 /**
- * Sends a signed JSON request to a backend service using the admin web device ID.
- * Non-GET/HEAD requests serialize the provided body into the signed payload.
+ * Sends a signed JSON request to a backend service.
+ * Signs path + querystring together so the signature is symmetric with what
+ * the backend reconstructs from request.url. Callers MUST supply deviceId;
+ * only the login route is allowed to mint a new device ID.
  */
 export async function signedBackendFetch({
   baseUrl,
@@ -36,6 +36,7 @@ export async function signedBackendFetch({
   body,
   accessToken,
   deviceId,
+  query,
   timeoutMs = defaultTimeoutMs,
 }: {
   baseUrl: string;
@@ -43,21 +44,30 @@ export async function signedBackendFetch({
   method?: string;
   body?: unknown;
   accessToken?: string;
-  deviceId?: string;
+  deviceId: string;
+  query?: Record<string, string | number | undefined>;
   timeoutMs?: number;
 }): Promise<Response> {
   const normalizedMethod = method.toUpperCase();
+  const qs = query
+    ? "?" +
+      new URLSearchParams(
+        Object.entries(query)
+          .filter((entry): entry is [string, string | number] => entry[1] !== undefined)
+          .map(([k, v]) => [k, String(v)])
+      ).toString()
+    : "";
+  const fullPath = `${path}${qs}`;
   const bodyText =
     normalizedMethod === "GET" || normalizedMethod === "HEAD" ? "{}" : JSON.stringify(body ?? {});
-  const resolvedDeviceId = deviceId ?? `admin-web-${randomUUID()}`;
 
-  return fetch(`${baseUrl}${path}`, {
+  return fetch(`${baseUrl}${fullPath}`, {
     method: normalizedMethod,
     headers: buildSignedHeaders({
       method: normalizedMethod,
-      path,
+      path: fullPath,
       body: bodyText,
-      deviceId: resolvedDeviceId,
+      deviceId,
       jwt: accessToken,
     }),
     body: normalizedMethod === "GET" || normalizedMethod === "HEAD" ? undefined : bodyText,
