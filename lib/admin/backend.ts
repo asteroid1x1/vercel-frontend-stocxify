@@ -40,9 +40,7 @@ export async function signedBackendFetch({
 }) {
   const normalizedMethod = method.toUpperCase();
   const bodyText =
-    normalizedMethod === "GET" || normalizedMethod === "HEAD"
-      ? "{}"
-      : JSON.stringify(body ?? {});
+    normalizedMethod === "GET" || normalizedMethod === "HEAD" ? "{}" : JSON.stringify(body ?? {});
   const resolvedDeviceId = deviceId ?? `admin-web-${randomUUID()}`;
 
   return fetch(`${baseUrl}${path}`, {

@@ -9,11 +9,7 @@ import { AuthDivider } from "@/components/auth-divider";
 import { FloatingPaths } from "@/components/floating-paths";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 
 type LoginResponse = {
   ok?: boolean;
@@ -76,13 +72,19 @@ export function AdminLoginPage() {
           </div>
           <h1 className="text-3xl font-bold tracking-wide">Stoxify Control Console</h1>
           <p className="mt-3 text-muted-foreground">
-            Sign in with an existing Stoxify admin account. Authentication is routed through the current backend auth service.
+            Sign in with an existing Stoxify admin account. Authentication is routed through the
+            current backend auth service.
           </p>
         </div>
       </section>
 
       <section className="relative flex min-h-screen flex-col justify-center px-6 py-10">
-        <Button className="absolute left-5 top-7" variant="ghost" render={<Link href="/" />} nativeButton={false}>
+        <Button
+          className="absolute left-5 top-7"
+          variant="ghost"
+          render={<Link href="/" />}
+          nativeButton={false}
+        >
           Back home
         </Button>
 
@@ -90,7 +92,9 @@ export function AdminLoginPage() {
           <Logo className="lg:hidden" />
           <div className="flex flex-col gap-1">
             <h2 className="text-2xl font-bold tracking-wide">Admin Login</h2>
-            <p className="text-base text-muted-foreground">Use your existing Stoxify credentials.</p>
+            <p className="text-base text-muted-foreground">
+              Use your existing Stoxify credentials.
+            </p>
           </div>
 
           <AuthDivider>SECURE SIGN IN</AuthDivider>

@@ -7,7 +7,7 @@ export const LogoIcon = ({ className, ...props }: React.ComponentProps<"span">) 
     aria-hidden="true"
     className={cn(
       "inline-flex size-7 items-center justify-center rounded-lg bg-primary text-sm font-black text-primary-foreground",
-      className,
+      className
     )}
     {...props}
   >
@@ -16,7 +16,13 @@ export const LogoIcon = ({ className, ...props }: React.ComponentProps<"span">) 
 );
 
 export const Logo = ({ className, ...props }: React.ComponentProps<"div">) => (
-  <div className={cn("inline-flex items-center gap-2 font-sans text-lg font-extrabold tracking-tight", className)} {...props}>
+  <div
+    className={cn(
+      "inline-flex items-center gap-2 font-sans text-lg font-extrabold tracking-tight",
+      className
+    )}
+    {...props}
+  >
     <span>Stoxify</span>
   </div>
 );

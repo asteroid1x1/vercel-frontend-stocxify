@@ -99,8 +99,11 @@ export async function POST(request: NextRequest) {
     }).catch(() => undefined);
 
     return NextResponse.json(
-      { error: "This account does not have admin dashboard access.", code: "ADMIN_ACCESS_REQUIRED" },
-      { status: 403 },
+      {
+        error: "This account does not have admin dashboard access.",
+        code: "ADMIN_ACCESS_REQUIRED",
+      },
+      { status: 403 }
     );
   }
 

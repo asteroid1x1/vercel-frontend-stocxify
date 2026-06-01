@@ -25,12 +25,12 @@ export async function GET() {
   } catch {
     return NextResponse.json(
       { authenticated: false, error: "Unable to verify admin session" },
-      { status: 503 },
+      { status: 503 }
     );
   }
 
   return NextResponse.json(
     { authenticated: adminCheck.ok },
-    { status: adminCheck.ok ? 200 : adminCheck.status },
+    { status: adminCheck.ok ? 200 : adminCheck.status }
   );
 }
