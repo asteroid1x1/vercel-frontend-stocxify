@@ -1,12 +1,11 @@
 import { cookies } from "next/headers";
-import { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { backendUrls, signedBackendFetch } from "@/lib/admin/backend";
 import { adminCookieNames, adminCookieOptions } from "@/lib/admin/cookies";
 import { rejectCrossOriginPost } from "@/lib/admin/csrf";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const csrfRejection = rejectCrossOriginPost(request);
   if (csrfRejection) {
     return csrfRejection;

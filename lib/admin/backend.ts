@@ -41,7 +41,7 @@ export async function signedBackendFetch({
   accessToken?: string;
   deviceId?: string;
   timeoutMs?: number;
-}) {
+}): Promise<Response> {
   const normalizedMethod = method.toUpperCase();
   const bodyText =
     normalizedMethod === "GET" || normalizedMethod === "HEAD" ? "{}" : JSON.stringify(body ?? {});

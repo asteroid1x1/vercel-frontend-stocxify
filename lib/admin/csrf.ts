@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export function rejectCrossOriginPost(request: NextRequest) {
+export function rejectCrossOriginPost(request: NextRequest): NextResponse | null {
   const origin = request.headers.get("origin");
   const fetchSite = request.headers.get("sec-fetch-site");
 

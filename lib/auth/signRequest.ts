@@ -12,6 +12,10 @@ function getPrivateKey() {
   throw new Error("ECDSA_PRIVATE_KEY is required for signed backend requests.");
 }
 
+/**
+ * Builds the JSON and ECDSA signature headers expected by backend services.
+ * The signature payload format is METHOD|PATH|BODY|TIMESTAMP|NONCE|DEVICE_ID.
+ */
 export function buildSignedHeaders({
   method,
   path,
@@ -24,7 +28,7 @@ export function buildSignedHeaders({
   body: string;
   deviceId: string;
   jwt?: string;
-}) {
+}): Record<string, string> {
   const timestamp = Date.now().toString();
   const nonce = randomBytes(16).toString("hex");
   const message = `${method.toUpperCase()}|${path}|${body}|${timestamp}|${nonce}|${deviceId}`;

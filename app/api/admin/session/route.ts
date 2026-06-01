@@ -4,7 +4,7 @@ import { NextResponse } from "next/server";
 import { backendUrls, signedBackendFetch } from "@/lib/admin/backend";
 import { adminCookieNames } from "@/lib/admin/cookies";
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(adminCookieNames.accessToken)?.value;
   const deviceId = cookieStore.get(adminCookieNames.deviceId)?.value;

@@ -1,11 +1,12 @@
 import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
+import type { JSX } from "react";
 
 import { Button } from "@/components/ui/button";
 import { backendUrls, signedBackendFetch } from "@/lib/admin/backend";
 import { adminCookieNames, adminCookieOptions } from "@/lib/admin/cookies";
 
-async function logout() {
+async function logout(): Promise<void> {
   "use server";
 
   const cookieStore = await cookies();
@@ -29,7 +30,7 @@ async function logout() {
   redirect("/admin/login");
 }
 
-export default async function AdminPage() {
+export default async function AdminPage(): Promise<JSX.Element> {
   const cookieStore = await cookies();
   const accessToken = cookieStore.get(adminCookieNames.accessToken)?.value;
   const deviceId = cookieStore.get(adminCookieNames.deviceId)?.value;

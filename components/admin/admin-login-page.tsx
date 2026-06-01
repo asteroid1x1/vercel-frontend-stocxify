@@ -28,6 +28,10 @@ export function AdminLoginPage() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isPending) {
+      return;
+    }
+
     setError("");
     setIsPending(true);
 
@@ -99,7 +103,7 @@ export function AdminLoginPage() {
 
           <AuthDivider>SECURE SIGN IN</AuthDivider>
 
-          <form className="flex flex-col gap-3" onSubmit={onSubmit}>
+          <form aria-busy={isPending} className="flex flex-col gap-3" onSubmit={onSubmit}>
             <InputGroup>
               <InputGroupInput
                 autoComplete="email"

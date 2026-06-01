@@ -15,7 +15,7 @@ type LoginResponse = {
   code?: string;
 };
 
-async function readBackendJson<T>(response: Response) {
+async function readBackendJson<T>(response: Response): Promise<T> {
   try {
     return (await response.json()) as T;
   } catch {
@@ -23,7 +23,7 @@ async function readBackendJson<T>(response: Response) {
   }
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   const csrfRejection = rejectCrossOriginPost(request);
   if (csrfRejection) {
     return csrfRejection;
