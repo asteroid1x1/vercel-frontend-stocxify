@@ -1,0 +1,35 @@
+import { cookies } from "next/headers";
+import { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
+import { backendUrls, signedBackendFetch } from "@/lib/admin/backend";
+import { adminCookieNames, adminCookieOptions } from "@/lib/admin/cookies";
+import { rejectCrossOriginPost } from "@/lib/admin/csrf";
+
+export async function POST(request: NextRequest) {
+  const csrfRejection = rejectCrossOriginPost(request);
+  if (csrfRejection) {
+    return csrfRejection;
+  }
+
+  const cookieStore = await cookies();
+  const accessToken = cookieStore.get(adminCookieNames.accessToken)?.value;
+  const deviceId = cookieStore.get(adminCookieNames.deviceId)?.value;
+
+  if (accessToken && deviceId) {
+    await signedBackendFetch({
+      baseUrl: backendUrls.auth,
+      path: "/auth/logout",
+      method: "POST",
+      accessToken,
+      deviceId,
+    }).catch(() => undefined);
+  }
+
+  const response = NextResponse.json({ ok: true });
+  for (const name of Object.values(adminCookieNames)) {
+    response.cookies.set(name, "", { ...adminCookieOptions, maxAge: 0 });
+  }
+
+  return response;
+}
