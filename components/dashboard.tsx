@@ -31,8 +31,8 @@ type AnalyticsData = {
 type KpiState = {
   dashboard: DashboardData | null;
   analytics: AnalyticsData | null;
-  isLoading: boolean;
   error: string | null;
+  loadedFor: number;
 };
 
 // ─── KPI tile ────────────────────────────────────────────────────────────────
@@ -109,14 +109,16 @@ export function Dashboard() {
   const [state, setState] = useState<KpiState>({
     dashboard: null,
     analytics: null,
-    isLoading: true,
     error: null,
+    loadedFor: -1,
   });
   const [reloadKey, setReloadKey] = useState(0);
 
+  // Derive isLoading — true until state reflects the current reloadKey
+  const isLoading = state.loadedFor !== reloadKey;
+
   useEffect(() => {
     let active = true;
-    setState((s) => ({ ...s, isLoading: true, error: null }));
 
     void (async () => {
       try {
@@ -133,18 +135,18 @@ export function Dashboard() {
         if (!active) return;
 
         if (!dashRes.ok) {
-          setState({ dashboard: null, analytics: null, isLoading: false, error: "Dashboard API returned an error. Check service health." });
+          setState({ dashboard: null, analytics: null, error: "Dashboard API returned an error. Check service health.", loadedFor: reloadKey });
           return;
         }
 
-        setState({ dashboard: dashData, analytics: analyticsData, isLoading: false, error: null });
+        setState({ dashboard: dashData, analytics: analyticsData, error: null, loadedFor: reloadKey });
       } catch (err) {
         if (!active) return;
         setState({
           dashboard: null,
           analytics: null,
-          isLoading: false,
           error: err instanceof Error ? err.message : "Failed to load dashboard data.",
+          loadedFor: reloadKey,
         });
       }
     })();
@@ -153,7 +155,7 @@ export function Dashboard() {
   }, [reloadKey]);
 
   const retry = () => setReloadKey((k) => k + 1);
-  const { dashboard: d, analytics: a, isLoading, error } = state;
+  const { dashboard: d, analytics: a, error } = state;
 
   return (
     <div className="space-y-0">

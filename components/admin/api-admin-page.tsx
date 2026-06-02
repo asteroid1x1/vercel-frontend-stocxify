@@ -47,7 +47,7 @@ type ApiAdminPageProps = {
 type ApiState = {
   data: ApiRecord | null;
   error: string | null;
-  isLoading: boolean;
+  loadedFor: string;
 };
 
 function buildUrl(base: string, extra: Record<string, string>) {
@@ -96,45 +96,35 @@ export function ApiAdminPage({
   filters,
   paginated = false,
 }: ApiAdminPageProps) {
-  const [state, setState] = useState<ApiState>({
-    data: null,
-    error: null,
-    isLoading: true,
-  });
+  const [state, setState] = useState<ApiState>({ data: null, error: null, loadedFor: "" });
   const [reloadKey, setReloadKey] = useState(0);
 
-  const [search, setSearch] = useState<string>("");
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const mountedRef = useRef(false);
-
-  // Read initial state from hash on mount
-  useEffect(() => {
+  // Lazy-init from URL hash — no mount effect needed
+  const [searchResetCount, setSearchResetCount] = useState(0);
+  const [search, setSearch] = useState<string>(() => {
+    if (!searchable) return "";
+    return readHashQuery().get("q") ?? "";
+  });
+  const [filterValues, setFilterValues] = useState<Record<string, string>>(() => {
+    if (!filters?.length) return {};
     const params = readHashQuery();
-    if (searchable) {
-      const q = params.get("q");
-      if (q) setSearch(q);
+    const vals: Record<string, string> = {};
+    for (const f of filters) {
+      const v = params.get(f.key);
+      if (v) vals[f.key] = v;
     }
-    if (filters?.length) {
-      const vals: Record<string, string> = {};
-      for (const f of filters) {
-        const v = params.get(f.key);
-        if (v) vals[f.key] = v;
-      }
-      setFilterValues(vals);
-    }
-    if (paginated) {
-      const pageParam = Number(params.get("page") ?? 1);
-      if (pageParam > 1) setCurrentPage(pageParam);
-    }
-    mountedRef.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return vals;
+  });
+  const [currentPage, setCurrentPage] = useState<number>(() => {
+    if (!paginated) return 1;
+    const pageParam = Number(readHashQuery().get("page") ?? 1);
+    return pageParam > 1 ? pageParam : 1;
+  });
 
-  // Keep hash in sync with state
+  // Keep hash in sync — skip the very first render
+  const isFirstRender = useRef(true);
   useEffect(() => {
-    if (!mountedRef.current) return;
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
     const params = new URLSearchParams();
     if (searchable && search) params.set("q", search);
     for (const [k, v] of Object.entries(filterValues)) {
@@ -159,10 +149,12 @@ export function ApiAdminPage({
     return buildUrl(endpoint, extra);
   }, [endpoint, search, filterValues, currentPage, searchable, paginated]);
 
+  // Derive isLoading — true until state reflects the current request
+  const currentKey = `${effectiveEndpoint}|${reloadKey}`;
+  const isLoading = state.loadedFor !== currentKey;
+
   useEffect(() => {
     let isActive = true;
-
-    setState((current) => ({ ...current, isLoading: true }));
 
     void (async () => {
       try {
@@ -173,13 +165,13 @@ export function ApiAdminPage({
           throw new Error(readError(payload) ?? `Request failed with ${response.status}`);
         }
 
-        if (isActive) setState({ data: payload, error: null, isLoading: false });
+        if (isActive) setState({ data: payload, error: null, loadedFor: currentKey });
       } catch (error) {
         if (isActive) {
           setState({
             data: null,
             error: error instanceof Error ? error.message : "Unable to load backend data.",
-            isLoading: false,
+            loadedFor: currentKey,
           });
         }
       }
@@ -188,16 +180,16 @@ export function ApiAdminPage({
     return () => {
       isActive = false;
     };
-  }, [effectiveEndpoint, reloadKey]);
+  }, [currentKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const refresh = useCallback(() => {
-    setState((current) => ({ ...current, error: null, isLoading: true }));
     setReloadKey((current) => current + 1);
   }, []);
 
   const handleSearch = useCallback((q: string) => {
     setSearch(q);
     setCurrentPage(1);
+    if (!q) setSearchResetCount((c) => c + 1);
   }, []);
 
   const handleFiltersChange = useCallback((vals: Record<string, string>) => {
@@ -215,15 +207,15 @@ export function ApiAdminPage({
   const total = useMemo(() => asNumber(data.total) ?? asNumber(data.count) ?? rows.length, [data, rows.length]);
 
   const pageMetrics = useMemo(() => {
-    if (state.isLoading) return loadingMetrics(title);
+    if (isLoading) return loadingMetrics(title);
     if (state.error) return errorMetrics(state.error);
     return metrics ? metrics(data, rows, items) : defaultMetrics(data, rows);
-  }, [data, items, metrics, rows, state.error, state.isLoading, title]);
+  }, [data, isLoading, items, metrics, rows, state.error, title]);
 
   const pageInsights = useMemo(() => {
-    if (!state.data || state.error || state.isLoading || !insights) return undefined;
+    if (!state.data || state.error || isLoading || !insights) return undefined;
     return insights(data, rows, items);
-  }, [data, insights, items, rows, state.data, state.error, state.isLoading]);
+  }, [data, insights, isLoading, items, rows, state.data, state.error]);
 
   return (
     <AdminPageLayout
@@ -240,13 +232,14 @@ export function ApiAdminPage({
         rows,
         items,
         insights: pageInsights,
-        isLoading: state.isLoading,
+        isLoading: isLoading,
         errorMessage: state.error ?? undefined,
         emptyMessage,
         rowActions,
         primaryAction: primaryAction ? primaryAction(refresh) : undefined,
         onSearch: searchable ? handleSearch : undefined,
         searchQuery: search,
+        searchResetCount: searchable ? searchResetCount : undefined,
         searchPlaceholder: searchable ? searchPlaceholder : undefined,
         filters: filters?.length ? filters : undefined,
         filterValues,
