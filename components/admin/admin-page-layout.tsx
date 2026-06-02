@@ -71,6 +71,7 @@ export type AdminPageConfig = {
   // search + filter
   onSearch?: (q: string) => void;
   searchQuery?: string;
+  searchResetCount?: number;
   searchPlaceholder?: string;
   filters?: FilterDef[];
   filterValues?: Record<string, string>;
@@ -454,6 +455,7 @@ function DataPanel({ page, subtitle }: { page: AdminPageConfig; subtitle: string
         <div className="flex w-full items-center gap-2 md:w-80">
           {page.onSearch ? (
             <SearchInput
+              key={page.searchResetCount ?? 0}
               onSearch={page.onSearch}
               initialValue={page.searchQuery ?? ""}
               placeholder={page.searchPlaceholder ?? "Search"}

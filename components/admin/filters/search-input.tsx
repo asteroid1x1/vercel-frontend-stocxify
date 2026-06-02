@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { LoaderCircleIcon, SearchIcon, XIcon } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
@@ -15,10 +15,6 @@ type Props = {
 export function SearchInput({ onSearch, initialValue = "", placeholder = "Search", isLoading }: Props) {
   const [value, setValue] = useState(initialValue);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setValue(initialValue);
-  }, [initialValue]);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const next = e.target.value;
