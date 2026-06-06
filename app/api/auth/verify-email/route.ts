@@ -1,7 +1,12 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { backendUrls, clientIpFromRequest, forwardedIpHeaders, signedBackendFetch } from "@/lib/backend/index";
+import {
+  backendUrls,
+  clientIpFromRequest,
+  forwardedIpHeaders,
+  signedBackendFetch,
+} from "@/lib/backend/index";
 import { rejectCrossOriginPost } from "@/lib/auth/csrf";
 import { userCookieNames } from "@/lib/auth/cookies";
 import { checkUserLoginRateLimit } from "@/lib/auth/rate-limit";
@@ -49,7 +54,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request body", code: "BAD_REQUEST" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body", code: "BAD_REQUEST" },
+      { status: 400 }
+    );
   }
 
   if (!body.email || !body.otp) {

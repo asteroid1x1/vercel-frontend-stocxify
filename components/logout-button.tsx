@@ -27,12 +27,7 @@ export function LogoutButton({ className, children }: LogoutButtonProps) {
   };
 
   return (
-    <button
-      className={className}
-      disabled={isPending}
-      onClick={handleLogout}
-      type="button"
-    >
+    <button className={className} disabled={isPending} onClick={handleLogout} type="button">
       {isPending ? "Signing out…" : (children ?? "Sign out")}
     </button>
   );

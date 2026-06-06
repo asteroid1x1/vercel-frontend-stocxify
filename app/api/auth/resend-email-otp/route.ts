@@ -13,11 +13,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request body", code: "BAD_REQUEST" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body", code: "BAD_REQUEST" },
+      { status: 400 }
+    );
   }
 
   if (!body.email) {
-    return NextResponse.json({ error: "Email address is required", code: "BAD_REQUEST" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Email address is required", code: "BAD_REQUEST" },
+      { status: 400 }
+    );
   }
 
   const cookieStore = await cookies();
@@ -45,7 +51,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!response.ok) {
     const data = (await response.json().catch(() => ({}))) as { error?: string; code?: string };
     const userMessage = data.error ?? "Failed to resend verification code.";
-    return NextResponse.json({ error: userMessage, code: data.code }, { status: response.status || 400 });
+    return NextResponse.json(
+      { error: userMessage, code: data.code },
+      { status: response.status || 400 }
+    );
   }
 
   return NextResponse.json({ ok: true });

@@ -189,10 +189,14 @@ export default function SignupPage() {
       }
 
       if (!formData.sebiLicenseNumber.trim() || formData.sebiLicenseNumber.trim().length < 5) {
-        newErrors.sebiLicenseNumber = "SEBI Registration/License Number must be at least 5 characters";
+        newErrors.sebiLicenseNumber =
+          "SEBI Registration/License Number must be at least 5 characters";
       }
 
-      if (!formData.assetUnderResearchCr.trim() || Number.isNaN(Number(formData.assetUnderResearchCr))) {
+      if (
+        !formData.assetUnderResearchCr.trim() ||
+        Number.isNaN(Number(formData.assetUnderResearchCr))
+      ) {
         newErrors.assetUnderResearchCr = "Asset under research must be a valid number";
       }
 
@@ -200,7 +204,10 @@ export default function SignupPage() {
         newErrors.numberOfClients = "Number of research clients must be a non-negative integer";
       }
 
-      if (formData.website.trim() && !/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/.test(formData.website.trim())) {
+      if (
+        formData.website.trim() &&
+        !/^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/.test(formData.website.trim())
+      ) {
         newErrors.website = "Enter a valid URL (e.g. https://example.com)";
       }
     }
@@ -221,25 +228,25 @@ export default function SignupPage() {
 
     const bodyData = isAnalyst
       ? {
-        name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-        phone: `+91${formData.phone.trim()}`,
-        company_name: formData.companyName.trim(),
-        company_location: formData.companyLocation.trim(),
-        business_type: formData.businessType,
-        website: formData.website.trim(),
-        registration_type: formData.registrationType,
-        asset_under_research_cr: Number(formData.assetUnderResearchCr),
-        number_of_clients: Number(formData.numberOfClients),
-        sebi_license_number: formData.sebiLicenseNumber.trim(),
-      }
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+          phone: `+91${formData.phone.trim()}`,
+          company_name: formData.companyName.trim(),
+          company_location: formData.companyLocation.trim(),
+          business_type: formData.businessType,
+          website: formData.website.trim(),
+          registration_type: formData.registrationType,
+          asset_under_research_cr: Number(formData.assetUnderResearchCr),
+          number_of_clients: Number(formData.numberOfClients),
+          sebi_license_number: formData.sebiLicenseNumber.trim(),
+        }
       : {
-        name: formData.name.trim(),
-        email: formData.email.trim().toLowerCase(),
-        password: formData.password,
-        phone: `+91${formData.phone.trim()}`,
-      };
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          password: formData.password,
+          phone: `+91${formData.phone.trim()}`,
+        };
 
     try {
       const res = await fetch(url, {
@@ -377,9 +384,11 @@ export default function SignupPage() {
           {step === "otp" ? (
             <div
               className="animate-[fadeSlideIn_0.35s_ease-out]"
-              style={{
-                /* @keyframes injected via inline style for simplicity */
-              }}
+              style={
+                {
+                  /* @keyframes injected via inline style for simplicity */
+                }
+              }
             >
               <style>{`
                 @keyframes fadeSlideIn {
@@ -400,10 +409,8 @@ export default function SignupPage() {
                 </div>
                 <p className="text-[13px] leading-relaxed text-[var(--muted)]">
                   We sent a 6-digit code to{" "}
-                  <span className="font-semibold text-[var(--ink)]">
-                    {formData.email.trim()}
-                  </span>
-                  . Enter it below to complete your registration.
+                  <span className="font-semibold text-[var(--ink)]">{formData.email.trim()}</span>.
+                  Enter it below to complete your registration.
                 </p>
                 <div className="mt-3 inline-flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[12px] text-amber-800">
                   <span className="font-bold">Dev mode:</span> use code{" "}
@@ -425,7 +432,9 @@ export default function SignupPage() {
                   {otp.map((digit, i) => (
                     <input
                       key={i}
-                      ref={(el) => { otpInputs.current[i] = el; }}
+                      ref={(el) => {
+                        otpInputs.current[i] = el;
+                      }}
                       className="w-full aspect-square max-w-[52px] rounded-lg border border-[var(--line)] text-center text-xl font-bold text-[var(--ink)] transition-all focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/20"
                       inputMode="numeric"
                       maxLength={1}
@@ -499,20 +508,22 @@ export default function SignupPage() {
               {/* ROLE TOGGLE */}
               <div className="flex rounded-xl bg-[var(--line-2)] p-[3.5px] border border-[var(--line)] mb-6">
                 <button
-                  className={`flex-1 rounded-[9px] py-2 text-[13px] font-semibold transition-all ${role === "trader"
-                    ? "bg-white text-[var(--ink)] shadow-sm border border-[rgba(0,0,0,0.04)]"
-                    : "text-[var(--muted)] hover:text-[var(--ink)] bg-transparent"
-                    }`}
+                  className={`flex-1 rounded-[9px] py-2 text-[13px] font-semibold transition-all ${
+                    role === "trader"
+                      ? "bg-white text-[var(--ink)] shadow-sm border border-[rgba(0,0,0,0.04)]"
+                      : "text-[var(--muted)] hover:text-[var(--ink)] bg-transparent"
+                  }`}
                   onClick={() => handleRoleChange("trader")}
                   type="button"
                 >
                   Trader
                 </button>
                 <button
-                  className={`flex-1 rounded-[9px] py-2 text-[13px] font-semibold transition-all ${role === "analyst"
-                    ? "bg-white text-[var(--ink)] shadow-sm border border-[rgba(0,0,0,0.04)]"
-                    : "text-[var(--muted)] hover:text-[var(--ink)] bg-transparent"
-                    }`}
+                  className={`flex-1 rounded-[9px] py-2 text-[13px] font-semibold transition-all ${
+                    role === "analyst"
+                      ? "bg-white text-[var(--ink)] shadow-sm border border-[rgba(0,0,0,0.04)]"
+                      : "text-[var(--muted)] hover:text-[var(--ink)] bg-transparent"
+                  }`}
                   onClick={() => handleRoleChange("analyst")}
                   type="button"
                 >
@@ -523,7 +534,6 @@ export default function SignupPage() {
               {/* ANALYST REGISTRATION FORM */}
               {role === "analyst" ? (
                 <form className="space-y-4" onSubmit={handleSubmit}>
-
                   {/* SECTION 1: PERSONAL & CONTACT */}
                   <div className="border-b border-[var(--line)] pb-4">
                     <h3 className="text-xs font-extrabold uppercase tracking-[0.07em] text-[var(--brand)] mb-3">
@@ -532,12 +542,18 @@ export default function SignupPage() {
                     <div className="space-y-4">
                       {/* Full Name */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="name">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="name"
+                        >
                           Full Name
                         </label>
                         <input
-                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.name ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.name
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="name"
                           name="name"
                           onChange={handleChange}
@@ -545,12 +561,19 @@ export default function SignupPage() {
                           type="text"
                           value={formData.name}
                         />
-                        {fieldErrors.name && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.name}</p>}
+                        {fieldErrors.name && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.name}
+                          </p>
+                        )}
                       </div>
 
                       {/* Phone */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="phone">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="phone"
+                        >
                           Phone Number
                         </label>
                         <div className="relative flex rounded-lg">
@@ -558,8 +581,11 @@ export default function SignupPage() {
                             +91
                           </span>
                           <input
-                            className={`w-full rounded-r-lg border-y border-r px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.phone ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                              }`}
+                            className={`w-full rounded-r-lg border-y border-r px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                              fieldErrors.phone
+                                ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                                : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                            }`}
                             id="phone"
                             name="phone"
                             onChange={handleChange}
@@ -571,17 +597,27 @@ export default function SignupPage() {
                             pattern="[0-9]*"
                           />
                         </div>
-                        {fieldErrors.phone && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.phone}</p>}
+                        {fieldErrors.phone && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.phone}
+                          </p>
+                        )}
                       </div>
 
                       {/* Email */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="email">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="email"
+                        >
                           Email Address
                         </label>
                         <input
-                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.email ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.email
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="email"
                           name="email"
                           onChange={handleChange}
@@ -589,18 +625,28 @@ export default function SignupPage() {
                           type="email"
                           value={formData.email}
                         />
-                        {fieldErrors.email && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.email}</p>}
+                        {fieldErrors.email && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.email}
+                          </p>
+                        )}
                       </div>
 
                       {/* Password */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="password">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="password"
+                        >
                           Password
                         </label>
                         <div className="relative">
                           <input
-                            className={`w-full rounded-lg border pl-3.5 pr-10 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.password ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                              }`}
+                            className={`w-full rounded-lg border pl-3.5 pr-10 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                              fieldErrors.password
+                                ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                                : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                            }`}
                             id="password"
                             name="password"
                             onChange={handleChange}
@@ -616,7 +662,11 @@ export default function SignupPage() {
                             <Icon className="h-4 w-4" name={showPassword ? "eyeOff" : "eye"} />
                           </button>
                         </div>
-                        {fieldErrors.password && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.password}</p>}
+                        {fieldErrors.password && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.password}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -629,12 +679,18 @@ export default function SignupPage() {
                     <div className="space-y-4">
                       {/* Company Name */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="companyName">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="companyName"
+                        >
                           Company / Entity Name
                         </label>
                         <input
-                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.companyName ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.companyName
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="companyName"
                           name="companyName"
                           onChange={handleChange}
@@ -642,17 +698,27 @@ export default function SignupPage() {
                           type="text"
                           value={formData.companyName}
                         />
-                        {fieldErrors.companyName && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.companyName}</p>}
+                        {fieldErrors.companyName && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.companyName}
+                          </p>
+                        )}
                       </div>
 
                       {/* Location */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="companyLocation">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="companyLocation"
+                        >
                           Location of the Company
                         </label>
                         <input
-                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.companyLocation ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.companyLocation
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="companyLocation"
                           name="companyLocation"
                           onChange={handleChange}
@@ -660,12 +726,19 @@ export default function SignupPage() {
                           type="text"
                           value={formData.companyLocation}
                         />
-                        {fieldErrors.companyLocation && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.companyLocation}</p>}
+                        {fieldErrors.companyLocation && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.companyLocation}
+                          </p>
+                        )}
                       </div>
 
                       {/* Business Type */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="businessType">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="businessType"
+                        >
                           Business Type
                         </label>
                         <DropdownMenu>
@@ -678,21 +751,30 @@ export default function SignupPage() {
                               {formData.businessType === "Individual" && "Individual"}
                               {formData.businessType === "Partnership" && "Partnership"}
                               {formData.businessType === "LLP" && "LLP"}
-                              {formData.businessType === "Corporate" && "Corporate / Private Limited"}
+                              {formData.businessType === "Corporate" &&
+                                "Corporate / Private Limited"}
                             </span>
                             <ChevronDown className="h-4 w-4 text-[var(--muted-2)]" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="w-[--anchor-width] min-w-[200px]">
-                            <DropdownMenuItem onSelect={() => handleSelectChange("businessType", "Individual")}>
+                            <DropdownMenuItem
+                              onSelect={() => handleSelectChange("businessType", "Individual")}
+                            >
                               Individual
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleSelectChange("businessType", "Partnership")}>
+                            <DropdownMenuItem
+                              onSelect={() => handleSelectChange("businessType", "Partnership")}
+                            >
                               Partnership
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleSelectChange("businessType", "LLP")}>
+                            <DropdownMenuItem
+                              onSelect={() => handleSelectChange("businessType", "LLP")}
+                            >
                               LLP
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleSelectChange("businessType", "Corporate")}>
+                            <DropdownMenuItem
+                              onSelect={() => handleSelectChange("businessType", "Corporate")}
+                            >
                               Corporate / Private Limited
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -701,12 +783,18 @@ export default function SignupPage() {
 
                       {/* Website */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="website">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="website"
+                        >
                           Website (Optional)
                         </label>
                         <input
-                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.website ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.website
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="website"
                           name="website"
                           onChange={handleChange}
@@ -714,7 +802,11 @@ export default function SignupPage() {
                           type="url"
                           value={formData.website}
                         />
-                        {fieldErrors.website && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.website}</p>}
+                        {fieldErrors.website && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.website}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -727,7 +819,10 @@ export default function SignupPage() {
                     <div className="space-y-4">
                       {/* Registration Type */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="registrationType">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="registrationType"
+                        >
                           Type of Registration
                         </label>
                         <DropdownMenu>
@@ -737,15 +832,25 @@ export default function SignupPage() {
                             render={<button type="button" />}
                           >
                             <span>
-                              {formData.registrationType === "research_analyst" ? "Research Analyst" : "Investment Advisors"}
+                              {formData.registrationType === "research_analyst"
+                                ? "Research Analyst"
+                                : "Investment Advisors"}
                             </span>
                             <ChevronDown className="h-4 w-4 text-[var(--muted-2)]" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent className="w-[--anchor-width] min-w-[200px]">
-                            <DropdownMenuItem onSelect={() => handleSelectChange("registrationType", "research_analyst")}>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                handleSelectChange("registrationType", "research_analyst")
+                              }
+                            >
                               Research Analyst
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleSelectChange("registrationType", "investment_advisors")}>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                handleSelectChange("registrationType", "investment_advisors")
+                              }
+                            >
                               Investment Advisors
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -754,12 +859,18 @@ export default function SignupPage() {
 
                       {/* License Number */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="sebiLicenseNumber">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="sebiLicenseNumber"
+                        >
                           SEBI Registration / License Number
                         </label>
                         <input
-                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.sebiLicenseNumber ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.sebiLicenseNumber
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="sebiLicenseNumber"
                           name="sebiLicenseNumber"
                           onChange={handleChange}
@@ -767,17 +878,27 @@ export default function SignupPage() {
                           type="text"
                           value={formData.sebiLicenseNumber}
                         />
-                        {fieldErrors.sebiLicenseNumber && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.sebiLicenseNumber}</p>}
+                        {fieldErrors.sebiLicenseNumber && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.sebiLicenseNumber}
+                          </p>
+                        )}
                       </div>
 
                       {/* Assets Under Research */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="assetUnderResearchCr">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="assetUnderResearchCr"
+                        >
                           Asset Under Research (₹Cr)
                         </label>
                         <input
-                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.assetUnderResearchCr ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.assetUnderResearchCr
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="assetUnderResearchCr"
                           name="assetUnderResearchCr"
                           onChange={handleChange}
@@ -785,17 +906,27 @@ export default function SignupPage() {
                           type="text"
                           value={formData.assetUnderResearchCr}
                         />
-                        {fieldErrors.assetUnderResearchCr && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.assetUnderResearchCr}</p>}
+                        {fieldErrors.assetUnderResearchCr && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.assetUnderResearchCr}
+                          </p>
+                        )}
                       </div>
 
                       {/* Client Count */}
                       <div>
-                        <label className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]" htmlFor="numberOfClients">
+                        <label
+                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
+                          htmlFor="numberOfClients"
+                        >
                           Number of Research Clients
                         </label>
                         <input
-                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.numberOfClients ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10" : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.numberOfClients
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="numberOfClients"
                           name="numberOfClients"
                           onChange={handleChange}
@@ -803,7 +934,11 @@ export default function SignupPage() {
                           type="text"
                           value={formData.numberOfClients}
                         />
-                        {fieldErrors.numberOfClients && <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.numberOfClients}</p>}
+                        {fieldErrors.numberOfClients && (
+                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                            {fieldErrors.numberOfClients}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -845,10 +980,11 @@ export default function SignupPage() {
                         Full Name
                       </label>
                       <input
-                        className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.name
-                          ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
-                          : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                          }`}
+                        className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                          fieldErrors.name
+                            ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                            : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                        }`}
                         id="name"
                         name="name"
                         onChange={handleChange}
@@ -858,7 +994,9 @@ export default function SignupPage() {
                         autoComplete="name"
                       />
                       {fieldErrors.name && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.name}</p>
+                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                          {fieldErrors.name}
+                        </p>
                       )}
                     </div>
 
@@ -875,10 +1013,11 @@ export default function SignupPage() {
                           +91
                         </span>
                         <input
-                          className={`w-full rounded-r-lg border-y border-r px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.phone
-                            ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
-                            : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-r-lg border-y border-r px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.phone
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="phone"
                           name="phone"
                           onChange={handleChange}
@@ -892,7 +1031,9 @@ export default function SignupPage() {
                         />
                       </div>
                       {fieldErrors.phone && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.phone}</p>
+                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                          {fieldErrors.phone}
+                        </p>
                       )}
                     </div>
 
@@ -905,10 +1046,11 @@ export default function SignupPage() {
                         Email Address
                       </label>
                       <input
-                        className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.email
-                          ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
-                          : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                          }`}
+                        className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                          fieldErrors.email
+                            ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                            : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                        }`}
                         id="email"
                         name="email"
                         onChange={handleChange}
@@ -918,7 +1060,9 @@ export default function SignupPage() {
                         autoComplete="email"
                       />
                       {fieldErrors.email && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.email}</p>
+                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                          {fieldErrors.email}
+                        </p>
                       )}
                     </div>
 
@@ -932,10 +1076,11 @@ export default function SignupPage() {
                       </label>
                       <div className="relative">
                         <input
-                          className={`w-full rounded-lg border pl-3.5 pr-10 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.password
-                            ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
-                            : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
+                          className={`w-full rounded-lg border pl-3.5 pr-10 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                            fieldErrors.password
+                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
+                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
+                          }`}
                           id="password"
                           name="password"
                           onChange={handleChange}
@@ -954,7 +1099,9 @@ export default function SignupPage() {
                         </button>
                       </div>
                       {fieldErrors.password && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.password}</p>
+                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                          {fieldErrors.password}
+                        </p>
                       )}
                     </div>
 

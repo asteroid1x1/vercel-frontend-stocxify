@@ -61,9 +61,7 @@ export default async function DashboardPage() {
           Stoxify
         </Link>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-[13px] text-[var(--muted)] max-[560px]:hidden">
-            {user.email}
-          </span>
+          <span className="text-[13px] text-[var(--muted)] max-[560px]:hidden">{user.email}</span>
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-extrabold text-white select-none">
             {initials}
           </div>
@@ -75,7 +73,6 @@ export default async function DashboardPage() {
 
       <main className="pt-[62px]">
         <div className="mx-auto max-w-[900px] px-6 py-12">
-
           {/* Profile card */}
           <div className="mb-8 rounded-2xl border border-[var(--line)] bg-white p-8 flex items-start gap-6 max-[560px]:flex-col max-[560px]:items-center max-[560px]:text-center">
             {/* Avatar */}
@@ -122,7 +119,8 @@ export default async function DashboardPage() {
                 Live Alerts
               </div>
               <p className="text-[13px] text-[var(--muted)] leading-relaxed">
-                Subscribe to a SEBI-registered Research Analyst to start receiving real-time trade ideas here.
+                Subscribe to a SEBI-registered Research Analyst to start receiving real-time trade
+                ideas here.
               </p>
               <Link
                 href="/#marketplace"
@@ -164,13 +162,16 @@ export default async function DashboardPage() {
                 { label: "Account state", value: status.text },
               ].map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between px-6 py-3.5 gap-4">
-                  <dt className="text-[12px] font-semibold text-[var(--muted)] shrink-0">{label}</dt>
-                  <dd className="text-[13px] text-[var(--ink)] font-mono text-right truncate">{value}</dd>
+                  <dt className="text-[12px] font-semibold text-[var(--muted)] shrink-0">
+                    {label}
+                  </dt>
+                  <dd className="text-[13px] text-[var(--ink)] font-mono text-right truncate">
+                    {value}
+                  </dd>
                 </div>
               ))}
             </dl>
           </div>
-
         </div>
       </main>
     </div>

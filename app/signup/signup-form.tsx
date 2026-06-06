@@ -286,9 +286,11 @@ export default function SignupPage() {
           {step === "otp" ? (
             <div
               className="animate-[fadeSlideIn_0.35s_ease-out]"
-              style={{
-                /* @keyframes injected via inline style for simplicity */
-              }}
+              style={
+                {
+                  /* @keyframes injected via inline style for simplicity */
+                }
+              }
             >
               <style>{`
                 @keyframes fadeSlideIn {
@@ -309,10 +311,8 @@ export default function SignupPage() {
                 </div>
                 <p className="text-[13px] leading-relaxed text-[var(--muted)]">
                   We sent a 6-digit code to{" "}
-                  <span className="font-semibold text-[var(--ink)]">
-                    {formData.email.trim()}
-                  </span>
-                  . Enter it below to complete your registration.
+                  <span className="font-semibold text-[var(--ink)]">{formData.email.trim()}</span>.
+                  Enter it below to complete your registration.
                 </p>
                 <div className="mt-3 inline-flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[12px] text-amber-800">
                   <span className="font-bold">Dev mode:</span> use code{" "}
@@ -334,7 +334,9 @@ export default function SignupPage() {
                   {otp.map((digit, i) => (
                     <input
                       key={i}
-                      ref={(el) => { otpInputs.current[i] = el; }}
+                      ref={(el) => {
+                        otpInputs.current[i] = el;
+                      }}
                       className="w-full aspect-square max-w-[52px] rounded-lg border border-[var(--line)] text-center text-xl font-bold text-[var(--ink)] transition-all focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/20"
                       inputMode="numeric"
                       maxLength={1}
@@ -375,8 +377,8 @@ export default function SignupPage() {
                   {isResending
                     ? "Resending..."
                     : cooldown > 0
-                    ? `Resend in ${cooldown}s`
-                    : "Resend Code"}
+                      ? `Resend in ${cooldown}s`
+                      : "Resend Code"}
                 </button>
               </div>
 
@@ -485,7 +487,9 @@ export default function SignupPage() {
                         autoComplete="name"
                       />
                       {fieldErrors.name && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.name}</p>
+                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                          {fieldErrors.name}
+                        </p>
                       )}
                     </div>
 
@@ -520,7 +524,9 @@ export default function SignupPage() {
                         />
                       </div>
                       {fieldErrors.phone && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.phone}</p>
+                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                          {fieldErrors.phone}
+                        </p>
                       )}
                     </div>
 
@@ -547,7 +553,9 @@ export default function SignupPage() {
                         autoComplete="email"
                       />
                       {fieldErrors.email && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.email}</p>
+                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                          {fieldErrors.email}
+                        </p>
                       )}
                     </div>
 
@@ -584,7 +592,9 @@ export default function SignupPage() {
                         </button>
                       </div>
                       {fieldErrors.password && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.password}</p>
+                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                          {fieldErrors.password}
+                        </p>
                       )}
                     </div>
 

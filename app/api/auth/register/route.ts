@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { backendUrls, clientIpFromRequest, forwardedIpHeaders, signedBackendFetch } from "@/lib/backend/index";
+import {
+  backendUrls,
+  clientIpFromRequest,
+  forwardedIpHeaders,
+  signedBackendFetch,
+} from "@/lib/backend/index";
 import { rejectCrossOriginPost } from "@/lib/auth/csrf";
 import { userCookieNames } from "@/lib/auth/cookies";
 import { checkUserLoginRateLimit } from "@/lib/auth/rate-limit";
@@ -59,7 +64,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request body", code: "BAD_REQUEST" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body", code: "BAD_REQUEST" },
+      { status: 400 }
+    );
   }
 
   if (!body.name || !body.email || !body.password) {
@@ -70,8 +78,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const cookieStore = await cookies();
-  const deviceId =
-    cookieStore.get(userCookieNames.deviceId)?.value ?? `user-web-${randomUUID()}`;
+  const deviceId = cookieStore.get(userCookieNames.deviceId)?.value ?? `user-web-${randomUUID()}`;
 
   let registerResponse: Response;
   try {
@@ -107,7 +114,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   if (!registerResponse.ok) {
     const code = registerData.code ?? "";
     const userMessage = ERROR_MAP[code] ?? "Unable to create account";
-    return NextResponse.json({ error: userMessage, code }, { status: registerResponse.status || 400 });
+    return NextResponse.json(
+      { error: userMessage, code },
+      { status: registerResponse.status || 400 }
+    );
   }
 
   const redirectTo = `/verify-email?email=${encodeURIComponent(body.email.trim())}`;

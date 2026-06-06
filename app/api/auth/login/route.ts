@@ -2,7 +2,12 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { backendUrls, clientIpFromRequest, forwardedIpHeaders, signedBackendFetch } from "@/lib/backend/index";
+import {
+  backendUrls,
+  clientIpFromRequest,
+  forwardedIpHeaders,
+  signedBackendFetch,
+} from "@/lib/backend/index";
 import { rejectCrossOriginPost } from "@/lib/auth/csrf";
 import { userCookieNames } from "@/lib/auth/cookies";
 import { checkUserLoginRateLimit } from "@/lib/auth/rate-limit";
@@ -53,7 +58,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   const rateLimit = checkUserLoginRateLimit(ip);
   if (!rateLimit.ok) {
-    console.warn("[user-login] Rate limit exceeded", { ip, retryAfterSec: rateLimit.retryAfterSec });
+    console.warn("[user-login] Rate limit exceeded", {
+      ip,
+      retryAfterSec: rateLimit.retryAfterSec,
+    });
     return NextResponse.json(
       { error: "Too many login attempts. Please try again later.", code: "RATE_LIMITED" },
       {
@@ -70,7 +78,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request body", code: "BAD_REQUEST" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body", code: "BAD_REQUEST" },
+      { status: 400 }
+    );
   }
 
   if (!body.email || !body.password) {
@@ -81,8 +92,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const cookieStore = await cookies();
-  const deviceId =
-    cookieStore.get(userCookieNames.deviceId)?.value ?? `user-web-${randomUUID()}`;
+  const deviceId = cookieStore.get(userCookieNames.deviceId)?.value ?? `user-web-${randomUUID()}`;
 
   let loginResponse: Response;
   try {

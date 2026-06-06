@@ -131,8 +131,8 @@ function VerifyEmailForm() {
           </h1>
           <p className="text-[13px] leading-relaxed text-[var(--muted)]">
             We sent a 6-digit code to{" "}
-            <span className="font-semibold text-[var(--ink)]">{email || "your email"}</span>.
-            Enter it below to verify your account.
+            <span className="font-semibold text-[var(--ink)]">{email || "your email"}</span>. Enter
+            it below to verify your account.
           </p>
           <div className="mt-3 inline-flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[12px] text-amber-800">
             <span className="font-bold">Dev mode:</span> use code{" "}
@@ -152,7 +152,9 @@ function VerifyEmailForm() {
             {otp.map((digit, i) => (
               <input
                 key={i}
-                ref={(el) => { inputs.current[i] = el; }}
+                ref={(el) => {
+                  inputs.current[i] = el;
+                }}
                 className="w-full aspect-square rounded-lg border border-[var(--line)] text-center text-xl font-bold text-[var(--ink)] transition-all focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/20"
                 inputMode="numeric"
                 maxLength={1}
@@ -190,16 +192,15 @@ function VerifyEmailForm() {
             className="font-bold text-[var(--brand)] hover:underline disabled:opacity-50 disabled:no-underline"
             type="button"
           >
-            {isResending
-              ? "Resending..."
-              : cooldown > 0
-              ? `Resend in ${cooldown}s`
-              : "Resend Code"}
+            {isResending ? "Resending..." : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend Code"}
           </button>
         </div>
 
         <div className="mt-4 text-center">
-          <Link className="text-[13px] font-semibold text-[var(--brand)] hover:underline" href="/login">
+          <Link
+            className="text-[13px] font-semibold text-[var(--brand)] hover:underline"
+            href="/login"
+          >
             Back to login
           </Link>
         </div>

@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { backendUrls, clientIpFromRequest, forwardedIpHeaders, signedBackendFetch } from "@/lib/backend/index";
+import {
+  backendUrls,
+  forwardedIpHeaders,
+  signedBackendFetch,
+} from "@/lib/backend/index";
 import { rejectCrossOriginPost } from "@/lib/auth/csrf";
 import { userCookieNames } from "@/lib/auth/cookies";
 
@@ -35,7 +39,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid request body", code: "BAD_REQUEST" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid request body", code: "BAD_REQUEST" },
+      { status: 400 }
+    );
   }
 
   // Basic check for required fields
@@ -59,8 +66,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const cookieStore = await cookies();
-  const deviceId =
-    cookieStore.get(userCookieNames.deviceId)?.value ?? `user-web-${randomUUID()}`;
+  const deviceId = cookieStore.get(userCookieNames.deviceId)?.value ?? `user-web-${randomUUID()}`;
 
   let response: Response;
   try {

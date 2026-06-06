@@ -6,7 +6,6 @@ import { rejectCrossOriginPost } from "@/lib/auth/csrf";
 import { userCookieNames } from "@/lib/auth/cookies";
 import { clearUserCookies } from "@/lib/auth/server-session";
 
-
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const csrfRejection = rejectCrossOriginPost(request);
   if (csrfRejection) return csrfRejection;

@@ -104,7 +104,9 @@ export default function LoginPage() {
 
       if (!res.ok) {
         if (data.code === "EMAIL_UNVERIFIED") {
-          router.push(`/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}`);
+          router.push(
+            `/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}`
+          );
           return;
         }
         setConsecutiveFailures((c) => c + 1);
@@ -196,10 +198,11 @@ export default function LoginPage() {
                 Email Address
               </label>
               <input
-                className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.email
+                className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                  fieldErrors.email
                     ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
                     : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                  }`}
+                }`}
                 id="email"
                 name="email"
                 onChange={handleChange}
@@ -209,7 +212,9 @@ export default function LoginPage() {
                 autoComplete="email"
               />
               {fieldErrors.email && (
-                <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.email}</p>
+                <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                  {fieldErrors.email}
+                </p>
               )}
             </div>
 
@@ -231,10 +236,11 @@ export default function LoginPage() {
               </div>
               <div className="relative">
                 <input
-                  className={`w-full rounded-lg border pl-3.5 pr-10 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${fieldErrors.password
+                  className={`w-full rounded-lg border pl-3.5 pr-10 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
+                    fieldErrors.password
                       ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
                       : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                    }`}
+                  }`}
                   id="password"
                   name="password"
                   onChange={handleChange}
@@ -253,7 +259,9 @@ export default function LoginPage() {
                 </button>
               </div>
               {fieldErrors.password && (
-                <p className="mt-1 text-[11px] text-[var(--red)] font-medium">{fieldErrors.password}</p>
+                <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
+                  {fieldErrors.password}
+                </p>
               )}
             </div>
 
