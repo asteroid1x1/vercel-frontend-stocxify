@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 import { AuthPanel } from "../components/auth-panel";
 import { Icon } from "../components/stoxify-icon";
+import { saveAuthToken } from "@/app/lib/api";
 
 interface FormErrors {
   email?: string;
@@ -25,6 +27,19 @@ export default function LoginPage() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedData, setSubmittedData] = useState<SubmittedLoginData | null>(null);
+  const [nextUrl, setNextUrl] = useState("/dashboard");
+
+  const router = useRouter();
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const next = params.get("next");
+      if (next) {
+        setNextUrl(next);
+      }
+    }
+  }, []);
 
   // Field change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,6 +89,12 @@ export default function LoginPage() {
       
       console.log("Login form submitted successfully:", output);
       setSubmittedData(output);
+
+      // Save mock token to enable bypassing auth middleware
+      saveAuthToken("mock_access_token_value");
+
+      // Redirect to next URL or main dashboard
+      router.push(nextUrl);
     }, 1500);
   };
 
