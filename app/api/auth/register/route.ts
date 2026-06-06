@@ -14,7 +14,7 @@ import { checkUserLoginRateLimit } from "@/lib/auth/rate-limit";
 
 type BackendRegisterResponse = {
   user_id?: string;
-  email?: string;
+  phone?: string;
   state?: string;
   error?: string;
   message?: string;
@@ -23,13 +23,11 @@ type BackendRegisterResponse = {
 
 type RegisterRequestBody = {
   name?: string;
-  email?: string;
-  password?: string;
   phone?: string;
 };
 
 const ERROR_MAP: Record<string, string> = {
-  EMAIL_EXISTS: "An account with this email already exists. Try logging in.",
+  PHONE_EXISTS: "An account with this phone number already exists. Try logging in.",
 };
 
 async function readBackendJson<T>(response: Response): Promise<T> {
@@ -70,9 +68,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  if (!body.name || !body.email || !body.password) {
+  const name = body.name?.trim();
+  const phone = body.phone?.trim();
+
+  if (!name || !phone) {
     return NextResponse.json(
-      { error: "Name, email and password are required", code: "BAD_REQUEST" },
+      { error: "Name and phone are required", code: "BAD_REQUEST" },
       { status: 400 }
     );
   }
@@ -88,9 +89,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       method: "POST",
       deviceId,
       body: {
-        name: body.name.trim(),
-        email: body.email.trim(),
-        password: body.password,
+        name,
+        phone,
         device_id: deviceId,
       },
       extraHeaders: forwardedIpHeaders(request),
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   console.info("[user-register] Registration attempt", {
     ip,
-    email: body.email.trim(),
+    phone,
     status: registerResponse.status,
     code: registerData.code,
   });
@@ -120,7 +120,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  const redirectTo = `/verify-email?email=${encodeURIComponent(body.email.trim())}`;
+  // Signup form handles OTP entry inline; on success it calls
+  // /api/auth/login-verify-otp which logs the new user in directly.
+  const redirectTo = "/login";
 
   const response = NextResponse.json({ ok: true, redirectTo });
   response.cookies.set(userCookieNames.deviceId, deviceId, {

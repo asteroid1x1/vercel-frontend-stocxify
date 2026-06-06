@@ -43,11 +43,13 @@ export default async function DashboardPage() {
   }
 
   const { user } = session;
-  if (user.state === "UNVERIFIED" && user.email) {
-    redirect(`/verify-email?email=${encodeURIComponent(user.email)}`);
+  // If a verified login somehow lands on /dashboard while still UNVERIFIED,
+  // bounce to /login — the OTP flow there will promote them on success.
+  if (user.state === "UNVERIFIED") {
+    redirect("/login");
   }
 
-  const initials = getInitials(user.name || user.email);
+  const initials = getInitials(user.name || user.email || user.phone);
   const status = stateLabel(user.state);
 
   return (
@@ -61,7 +63,9 @@ export default async function DashboardPage() {
           Stoxify
         </Link>
         <div className="ml-auto flex items-center gap-3">
-          <span className="text-[13px] text-[var(--muted)] max-[560px]:hidden">{user.email}</span>
+          <span className="text-[13px] text-[var(--muted)] max-[560px]:hidden">
+            {user.email || user.phone}
+          </span>
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-extrabold text-white select-none">
             {initials}
           </div>
@@ -95,7 +99,7 @@ export default async function DashboardPage() {
                 </span>
               </div>
 
-              <p className="mt-1 text-[13px] text-[var(--muted)]">{user.email}</p>
+              <p className="mt-1 text-[13px] text-[var(--muted)]">{user.email || user.phone}</p>
               <p className="mt-0.5 text-[11px] font-mono text-[var(--muted-2)]">{user.user_id}</p>
 
               <div className="mt-4 flex flex-wrap gap-2 max-[560px]:justify-center">
@@ -157,7 +161,8 @@ export default async function DashboardPage() {
             <dl className="divide-y divide-[var(--line)]">
               {[
                 { label: "Full name", value: user.name || "—" },
-                { label: "Email address", value: user.email },
+                { label: "Phone number", value: user.phone || "—" },
+                { label: "Email address", value: user.email || "—" },
                 { label: "Account ID", value: user.user_id },
                 { label: "Account state", value: status.text },
               ].map(({ label, value }) => (

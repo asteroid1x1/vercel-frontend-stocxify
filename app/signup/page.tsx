@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 
 import { AuthPanel } from "@/components/auth-panel";
+import { EmailVerificationStep } from "@/components/email-verification-step";
 import { Icon } from "@/components/stoxify-icon";
 import {
   DropdownMenu,
@@ -21,7 +22,6 @@ interface FormErrors {
   name?: string;
   phone?: string;
   email?: string;
-  password?: string;
   sebiLicenseNumber?: string;
   companyName?: string;
   companyLocation?: string;
@@ -40,7 +40,6 @@ export default function SignupPage() {
     name: "",
     phone: "",
     email: "",
-    password: "",
     companyName: "",
     companyLocation: "",
     businessType: "Individual",
@@ -50,51 +49,12 @@ export default function SignupPage() {
     assetUnderResearchCr: "",
     numberOfClients: "",
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [authError, setAuthError] = useState<string | null>(null);
+  const [verificationError, setVerificationError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // OTP state
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const [otpError, setOtpError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
-  const otpInputs = useRef<(HTMLInputElement | null)[]>([]);
-  const [cooldown, setCooldown] = useState(0);
   const [isResending, setIsResending] = useState(false);
-
-  useEffect(() => {
-    if (cooldown === 0) return;
-    const timer = setTimeout(() => {
-      setCooldown((prev) => prev - 1);
-    }, 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
-
-  const handleResendOtp = async () => {
-    if (cooldown > 0 || isResending) return;
-    setIsResending(true);
-    setOtpError(null);
-
-    try {
-      const res = await fetch("/api/auth/resend-email-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: formData.email.trim().toLowerCase() }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setOtpError(data.error ?? "Failed to resend verification code.");
-      } else {
-        setCooldown(60);
-      }
-    } catch {
-      setOtpError("Unable to resend code. Please check your connection.");
-    } finally {
-      setIsResending(false);
-    }
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -144,6 +104,7 @@ export default function SignupPage() {
     setRole(newRole);
     setFieldErrors({});
     setAuthError(null);
+    setVerificationError(null);
   };
 
   const validateForm = (): boolean => {
@@ -160,18 +121,13 @@ export default function SignupPage() {
       newErrors.phone = "Enter a valid 10-digit mobile number starting with 6, 7, 8, or 9";
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = "Email address is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
-      newErrors.email = "Enter a valid email address";
-    }
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.trim().length === 0) {
-      newErrors.password = "Password cannot consist only of spaces";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
+    // Email is only required for analysts — traders verify via phone OTP.
+    if (role === "analyst") {
+      if (!formData.email.trim()) {
+        newErrors.email = "Email address is required";
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+        newErrors.email = "Enter a valid email address";
+      }
     }
 
     // Role-specific fields for Analyst
@@ -222,6 +178,7 @@ export default function SignupPage() {
 
     setIsSubmitting(true);
     setAuthError(null);
+    setVerificationError(null);
 
     const isAnalyst = role === "analyst";
     const url = isAnalyst ? "/api/auth/register-analyst" : "/api/auth/register";
@@ -230,7 +187,6 @@ export default function SignupPage() {
       ? {
           name: formData.name.trim(),
           email: formData.email.trim().toLowerCase(),
-          password: formData.password,
           phone: `+91${formData.phone.trim()}`,
           company_name: formData.companyName.trim(),
           company_location: formData.companyLocation.trim(),
@@ -242,9 +198,8 @@ export default function SignupPage() {
           sebi_license_number: formData.sebiLicenseNumber.trim(),
         }
       : {
+          // Trader: passwordless phone-OTP signup. Email is captured later.
           name: formData.name.trim(),
-          email: formData.email.trim().toLowerCase(),
-          password: formData.password,
           phone: `+91${formData.phone.trim()}`,
         };
 
@@ -269,67 +224,59 @@ export default function SignupPage() {
         return;
       }
 
-      // Transition to OTP step instead of navigating away
       setStep("otp");
       setIsSubmitting(false);
-      // Focus the first OTP input after transition
-      setTimeout(() => otpInputs.current[0]?.focus(), 100);
     } catch {
       setAuthError("Unable to create account. Please check your connection and try again.");
       setIsSubmitting(false);
     }
   };
 
-  // ── OTP handlers ──────────────────────────────────────────────
+  // Both resend and verify use the unified passwordless login OTP endpoints.
+  // The first successful verify also promotes the user out of UNVERIFIED.
+  const identifierForOtp = () =>
+    role === "analyst"
+      ? formData.email.trim().toLowerCase()
+      : `+91${formData.phone.trim()}`;
 
-  const handleOtpChange = (index: number, value: string) => {
-    const digit = value.replace(/\D/g, "").slice(-1);
-    const next = [...otp];
-    next[index] = digit;
-    setOtp(next);
-    setOtpError(null);
-
-    if (digit && index < 5) {
-      otpInputs.current[index + 1]?.focus();
-    }
-  };
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      otpInputs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleOtpPaste = (e: React.ClipboardEvent) => {
-    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-    if (!pasted) return;
-    e.preventDefault();
-    const next = [...otp];
-    for (let i = 0; i < 6; i++) {
-      next[i] = pasted[i] ?? "";
-    }
-    setOtp(next);
-    otpInputs.current[Math.min(pasted.length, 5)]?.focus();
-  };
-
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const code = otp.join("");
-    if (code.length !== 6) {
-      setOtpError("Enter all 6 digits of your verification code");
-      return;
-    }
-
-    setIsVerifying(true);
-    setOtpError(null);
+  const handleResendOtp = async () => {
+    setIsResending(true);
+    setVerificationError(null);
 
     try {
-      const res = await fetch("/api/auth/verify-email", {
+      const res = await fetch("/api/auth/login-request-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: identifierForOtp() }),
+      });
+
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+
+      if (!res.ok) {
+        setVerificationError(data.error ?? "Failed to resend verification code.");
+        return false;
+      }
+
+      return true;
+    } catch {
+      setVerificationError("Unable to resend code. Please check your connection.");
+      return false;
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const handleVerifyOtp = async (otp: string) => {
+    setIsVerifying(true);
+    setVerificationError(null);
+
+    try {
+      const res = await fetch("/api/auth/login-verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "same-origin",
         cache: "no-store",
-        body: JSON.stringify({ email: formData.email.trim().toLowerCase(), otp: code }),
+        body: JSON.stringify({ identifier: identifierForOtp(), otp }),
       });
 
       const data = (await res.json().catch(() => ({}))) as {
@@ -339,24 +286,25 @@ export default function SignupPage() {
       };
 
       if (!res.ok) {
-        setOtpError(data.error ?? "Verification failed. Please try again.");
-        setOtp(["", "", "", "", "", ""]);
-        otpInputs.current[0]?.focus();
+        setVerificationError(data.error ?? "Verification failed. Please try again.");
         setIsVerifying(false);
-        return;
+        return false;
       }
 
-      router.push(data.redirectTo ?? "/login?verified=1");
+      router.push(data.redirectTo ?? "/dashboard");
+      router.refresh();
+      return true;
     } catch {
-      setOtpError("Unable to verify. Please check your connection and try again.");
+      setVerificationError("Unable to verify. Please check your connection and try again.");
       setIsVerifying(false);
+      return false;
     }
   };
 
-  const handleBackToForm = () => {
+  const handleBackToSignup = () => {
     setStep("form");
-    setOtp(["", "", "", "", "", ""]);
-    setOtpError(null);
+    setVerificationError(null);
+    setIsVerifying(false);
   };
 
   // ── Render ────────────────────────────────────────────────────
@@ -380,118 +328,46 @@ export default function SignupPage() {
         </div>
 
         <div className="my-auto mx-auto w-full max-w-[400px]">
-          {/* ─── STEP: OTP VERIFICATION ─── */}
           {step === "otp" ? (
-            <div
-              className="animate-[fadeSlideIn_0.35s_ease-out]"
-              style={
-                {
-                  /* @keyframes injected via inline style for simplicity */
-                }
-              }
-            >
-              <style>{`
-                @keyframes fadeSlideIn {
-                  from { opacity: 0; transform: translateY(12px); }
-                  to   { opacity: 1; transform: translateY(0); }
-                }
-              `}</style>
-
-              {/* Heading */}
-              <div className="mb-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--brand)]/10 text-[var(--brand)]">
-                    <Icon className="h-4 w-4" name="mail" />
-                  </span>
-                  <h1 className="text-2xl font-bold tracking-[-0.5px] text-[var(--ink)]">
-                    Verify your email
-                  </h1>
-                </div>
-                <p className="text-[13px] leading-relaxed text-[var(--muted)]">
-                  We sent a 6-digit code to{" "}
-                  <span className="font-semibold text-[var(--ink)]">{formData.email.trim()}</span>.
-                  Enter it below to complete your registration.
-                </p>
-                <div className="mt-3 inline-flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[12px] text-amber-800">
-                  <span className="font-bold">Dev mode:</span> use code{" "}
-                  <span className="font-mono font-extrabold tracking-widest">999999</span>
-                </div>
-              </div>
-
-              {/* OTP Error */}
-              {otpError && (
-                <div className="mb-5 rounded-lg border border-[rgba(220,38,38,0.2)] bg-red-50 px-3.5 py-3 text-[13px] text-red-700 flex items-start gap-2">
-                  <Icon className="h-4 w-4 shrink-0 mt-0.5" name="x" />
-                  <span>{otpError}</span>
-                </div>
-              )}
-
-              {/* OTP Form */}
-              <form onSubmit={handleVerifyOtp}>
-                <div className="flex gap-2 mb-6" onPaste={handleOtpPaste}>
-                  {otp.map((digit, i) => (
-                    <input
-                      key={i}
-                      ref={(el) => {
-                        otpInputs.current[i] = el;
-                      }}
-                      className="w-full aspect-square max-w-[52px] rounded-lg border border-[var(--line)] text-center text-xl font-bold text-[var(--ink)] transition-all focus:border-[var(--brand)] focus:outline-none focus:ring-2 focus:ring-[var(--brand)]/20"
-                      inputMode="numeric"
-                      maxLength={1}
-                      onChange={(e) => handleOtpChange(i, e.target.value)}
-                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
-                      type="text"
-                      value={digit}
-                      autoComplete={i === 0 ? "one-time-code" : "off"}
-                      aria-label={`Digit ${i + 1}`}
-                    />
-                  ))}
-                </div>
-
-                <button
-                  className="w-full rounded-lg bg-[var(--brand)] py-3 text-[13.5px] font-bold text-white transition-all hover:bg-[var(--brand-dark)] hover:shadow-md active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
-                  disabled={isVerifying}
-                  type="submit"
-                >
-                  {isVerifying ? (
+            (() => {
+              const isAnalyst = role === "analyst";
+              const target = isAnalyst
+                ? formData.email.trim().toLowerCase()
+                : `+91 ${formData.phone.trim()}`;
+              return (
+                <EmailVerificationStep
+                  key={target}
+                  description={
                     <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      Verifying...
+                      We sent a 6-digit code to{" "}
+                      <span className="font-semibold text-[var(--ink)]">{target}</span>. Enter it
+                      below to complete your registration.
                     </>
-                  ) : (
-                    "Verify Email"
-                  )}
-                </button>
-              </form>
-
-              <div className="mt-5 text-center text-[13px]">
-                <span className="text-[var(--muted)]">Didn&apos;t receive a code? </span>
-                <button
-                  onClick={handleResendOtp}
-                  disabled={cooldown > 0 || isResending}
-                  className="font-bold text-[var(--brand)] hover:underline disabled:opacity-50 disabled:no-underline"
-                  type="button"
-                >
-                  {isResending
-                    ? "Resending..."
-                    : cooldown > 0
-                      ? `Resend in ${cooldown}s`
-                      : "Resend Code"}
-                </button>
-              </div>
-
-              <div className="mt-3 text-center">
-                <button
-                  className="text-[13px] font-semibold text-[var(--brand)] hover:underline"
-                  onClick={handleBackToForm}
-                  type="button"
-                >
-                  ← Back to sign up
-                </button>
-              </div>
-            </div>
+                  }
+                  email={target}
+                  error={verificationError}
+                  footer={
+                    <div className="mt-3 text-center">
+                      <button
+                        className="text-[13px] font-semibold text-[var(--brand)] hover:underline"
+                        onClick={handleBackToSignup}
+                        type="button"
+                      >
+                        {isAnalyst ? "Use a different email" : "Use a different phone number"}
+                      </button>
+                    </div>
+                  }
+                  heading={isAnalyst ? "Check your inbox" : "Check your messages"}
+                  isResending={isResending}
+                  isSubmitting={isVerifying}
+                  onClearError={() => setVerificationError(null)}
+                  onResend={handleResendOtp}
+                  onVerify={handleVerifyOtp}
+                  submitLabel={isAnalyst ? "Verify Email" : "Verify Phone"}
+                />
+              );
+            })()
           ) : (
-            /* ─── STEP: REGISTRATION FORM ─── */
             <>
               {/* HEADING */}
               <div className="mb-6">
@@ -504,6 +380,13 @@ export default function SignupPage() {
                     : "Subscribe to registered experts and get real-time trade ideas."}
                 </p>
               </div>
+
+              {authError && (
+                <div className="mb-4 flex items-start gap-2 rounded-lg border border-[rgba(220,38,38,0.2)] bg-red-50 px-3.5 py-3 text-[13px] text-red-700">
+                  <Icon className="mt-0.5 h-4 w-4 shrink-0" name="x" />
+                  <span>{authError}</span>
+                </div>
+              )}
 
               {/* ROLE TOGGLE */}
               <div className="flex rounded-xl bg-[var(--line-2)] p-[3.5px] border border-[var(--line)] mb-6">
@@ -632,42 +515,7 @@ export default function SignupPage() {
                         )}
                       </div>
 
-                      {/* Password */}
-                      <div>
-                        <label
-                          className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
-                          htmlFor="password"
-                        >
-                          Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            className={`w-full rounded-lg border pl-3.5 pr-10 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
-                              fieldErrors.password
-                                ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
-                                : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                            }`}
-                            id="password"
-                            name="password"
-                            onChange={handleChange}
-                            placeholder="At least 8 characters"
-                            type={showPassword ? "text" : "password"}
-                            value={formData.password}
-                          />
-                          <button
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-2)] hover:text-[var(--ink)] focus:outline-none p-1"
-                            onClick={() => setShowPassword(!showPassword)}
-                            type="button"
-                          >
-                            <Icon className="h-4 w-4" name={showPassword ? "eyeOff" : "eye"} />
-                          </button>
-                        </div>
-                        {fieldErrors.password && (
-                          <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
-                            {fieldErrors.password}
-                          </p>
-                        )}
-                      </div>
+                      {/* Passwordless: analyst logs in via email OTP after onboarding. */}
                     </div>
                   </div>
 
@@ -961,14 +809,6 @@ export default function SignupPage() {
                 </form>
               ) : (
                 <>
-                  {/* AUTH ERROR BANNER */}
-                  {authError && (
-                    <div className="mb-4 rounded-lg border border-[rgba(220,38,38,0.2)] bg-red-50 px-3.5 py-3 text-[13px] text-red-700 flex items-start gap-2">
-                      <Icon className="h-4 w-4 shrink-0 mt-0.5" name="x" />
-                      <span>{authError}</span>
-                    </div>
-                  )}
-
                   {/* TRADER FORM */}
                   <form className="space-y-4" onSubmit={handleSubmit}>
                     {/* Full Name */}
@@ -1037,73 +877,7 @@ export default function SignupPage() {
                       )}
                     </div>
 
-                    {/* Email */}
-                    <div>
-                      <label
-                        className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
-                        htmlFor="email"
-                      >
-                        Email Address
-                      </label>
-                      <input
-                        className={`w-full rounded-lg border px-3.5 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
-                          fieldErrors.email
-                            ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
-                            : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                        }`}
-                        id="email"
-                        name="email"
-                        onChange={handleChange}
-                        placeholder="name@example.com"
-                        type="email"
-                        value={formData.email}
-                        autoComplete="email"
-                      />
-                      {fieldErrors.email && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
-                          {fieldErrors.email}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Password */}
-                    <div>
-                      <label
-                        className="mb-1.5 block text-xs font-bold uppercase tracking-[0.05em] text-[var(--muted)]"
-                        htmlFor="password"
-                      >
-                        Password
-                      </label>
-                      <div className="relative">
-                        <input
-                          className={`w-full rounded-lg border pl-3.5 pr-10 py-2.5 text-[13px] transition-all placeholder:text-[var(--muted-2)] focus:outline-none ${
-                            fieldErrors.password
-                              ? "border-[var(--red)] focus:border-[var(--red)] bg-[var(--red-light)]/10"
-                              : "border-[var(--line)] focus:border-[var(--brand)] focus:bg-white"
-                          }`}
-                          id="password"
-                          name="password"
-                          onChange={handleChange}
-                          placeholder="At least 8 characters"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.password}
-                          autoComplete="new-password"
-                        />
-                        <button
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--muted-2)] hover:text-[var(--ink)] focus:outline-none p-1"
-                          onClick={() => setShowPassword(!showPassword)}
-                          type="button"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          <Icon className="h-4 w-4" name={showPassword ? "eyeOff" : "eye"} />
-                        </button>
-                      </div>
-                      {fieldErrors.password && (
-                        <p className="mt-1 text-[11px] text-[var(--red)] font-medium">
-                          {fieldErrors.password}
-                        </p>
-                      )}
-                    </div>
+                    {/* Trader signup is passwordless phone-OTP. Email is captured later. */}
 
                     {/* SUBMIT */}
                     <button

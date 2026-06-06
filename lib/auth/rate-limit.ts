@@ -2,7 +2,9 @@ import "server-only";
 
 type Bucket = number[];
 
-const DEFAULT_LIMIT = 5;
+// Much more lenient limits for development
+const IS_DEV = process.env.NODE_ENV === "development";
+const DEFAULT_LIMIT = IS_DEV ? 100 : 5;
 const DEFAULT_WINDOW_MS = 10 * 60 * 1000;
 const PRUNE_INTERVAL = 100;
 

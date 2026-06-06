@@ -10,7 +10,6 @@ type RegisterAnalystRequestBody = {
   name?: string;
   email?: string;
   phone?: string;
-  password?: string;
   sebi_license_number?: string;
   sebi_license_doc_url?: string;
   company_name?: string;
@@ -46,7 +45,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     !body.name ||
     !body.email ||
     !body.phone ||
-    !body.password ||
     !body.sebi_license_number ||
     !body.company_name ||
     !body.company_location ||
@@ -75,7 +73,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         name: body.name.trim(),
         email: body.email.trim().toLowerCase(),
         phone: body.phone.trim(),
-        password: body.password,
         sebi_license_number: body.sebi_license_number.trim(),
         sebi_license_doc_url: body.sebi_license_doc_url || "https://stoxify.in/placeholder-doc.pdf",
         company_name: body.company_name.trim(),
@@ -116,7 +113,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: userMessage, code }, { status: response.status || 400 });
   }
 
-  const redirectTo = `/verify-email?email=${encodeURIComponent(body.email.trim().toLowerCase())}`;
+  // Signup OTP step is rendered inline by the signup form, which then calls
+  // /api/auth/login-verify-otp to log the new analyst in directly.
+  const redirectTo = "/login";
 
   const nextResponse = NextResponse.json({ ok: true, redirectTo });
   nextResponse.cookies.set(userCookieNames.deviceId, deviceId, {

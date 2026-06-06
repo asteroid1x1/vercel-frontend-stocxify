@@ -16,6 +16,7 @@ export type UserSessionUser = {
   user_id: string;
   name: string;
   email: string;
+  phone: string;
   state: string;
 };
 
@@ -41,7 +42,7 @@ export function writeUserTokenCookies(
     refresh_token?: string;
     session_id?: string;
     device_id?: string;
-    user?: { user_id?: string; name?: string; email?: string; state?: string };
+    user?: { user_id?: string; name?: string; email?: string; phone?: string; state?: string };
   }
 ) {
   response.cookies.set(userCookieNames.accessToken, data.access_token, {
@@ -74,6 +75,7 @@ export function writeUserTokenCookies(
         user_id: data.user.user_id ?? "",
         name: data.user.name ?? "",
         email: data.user.email ?? "",
+        phone: data.user.phone ?? "",
         state: data.user.state ?? "",
       }),
       {
@@ -104,15 +106,17 @@ export async function readUserSessionFromCookies(): Promise<UserSession> {
   const jwt = decodeJwtPayload(accessToken);
   if (!jwt?.user_id) return { authenticated: false };
 
-  // email is not in the JWT payload — read from the userInfo cookie set at login.
+  // email/phone are not in the JWT payload — read from the userInfo cookie set at login.
   let name = jwt.name ?? "";
   let email = "";
+  let phone = "";
   const rawInfo = store.get(userCookieNames.userInfo)?.value;
   if (rawInfo) {
     try {
-      const info = JSON.parse(rawInfo) as { name?: string; email?: string };
+      const info = JSON.parse(rawInfo) as { name?: string; email?: string; phone?: string };
       name = info.name ?? name;
       email = info.email ?? "";
+      phone = info.phone ?? "";
     } catch {
       // ignore malformed cookie
     }
@@ -124,6 +128,7 @@ export async function readUserSessionFromCookies(): Promise<UserSession> {
       user_id: jwt.user_id,
       name,
       email,
+      phone,
       state: jwt.state ?? "",
     },
     accessToken,
