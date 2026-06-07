@@ -81,7 +81,7 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     if (!res.ok) {
       // If we get a server/routing error (like 404 or 502/503/504 because backend is offline),
       // fallback to mock data so the demo is fully interactive.
-      if (res.status === 404 || res.status >= 500) {
+      if ((res.status === 404 || res.status >= 500) && process.env.NODE_ENV === "development") {
         console.warn(`[API] Fallback to mock data for ${path} due to status ${res.status}`);
         const { getMockResponse } = await import("./mock-data");
         return getMockResponse(path) as T;
@@ -100,13 +100,16 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
     return res.json() as Promise<T>;
   } catch (err) {
     // If the network request itself fails (e.g. Connection Refused), fallback to mock data.
-    console.warn(`[API] Network error. Fallback to mock data for ${path}. Error:`, err);
-    try {
-      const { getMockResponse } = await import("./mock-data");
-      return getMockResponse(path) as T;
-    } catch {
-      throw err;
+    if (process.env.NODE_ENV === "development") {
+      console.warn(`[API] Network error. Fallback to mock data for ${path}. Error:`, err);
+      try {
+        const { getMockResponse } = await import("./mock-data");
+        return getMockResponse(path) as T;
+      } catch {
+        throw err;
+      }
     }
+    throw err;
   }
 }
 

@@ -183,7 +183,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
       const dirText = position === "LONG" ? "LONG" : "SHORT";
       onSuccess(
         "Trade Created Successfully",
-        `${newTrade.symbol} ${dirText} trade has been created and broadcasted to 1,248 active subscribers.`
+        `${newTrade.symbol} ${dirText} trade has been created and broadcasted to your active subscribers.`
       );
 
       // Close the modal

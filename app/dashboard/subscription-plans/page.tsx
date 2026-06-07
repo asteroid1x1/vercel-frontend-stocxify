@@ -260,7 +260,7 @@ export default function SubscriptionPlansPage() {
                     <button
                       className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg border py-2 text-[12.5px] font-bold transition-all cursor-pointer ${
                         isActive
-                          ? "border-[var(--orange)]/35 text-[var(--orange)] hover:bg-[var(--orange)]/5"
+                          ? "border-[var(--red)]/35 text-[var(--red)] hover:bg-[var(--red)]/5"
                           : "border-[var(--green)]/35 text-[var(--green)] hover:bg-[var(--green)]/5"
                       }`}
                       onClick={() => handleToggleStatus(plan.plan_id, plan.status, plan.name)}

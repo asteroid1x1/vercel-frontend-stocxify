@@ -63,7 +63,6 @@ export default function ProfilePage() {
       setTwitterUrl(profile.twitter_url || "");
       setLinkedinUrl(profile.linkedin_url || "");
       setAvatarUrl(profile.avatar_url || "");
-      showSuccessToast("Changes Cancelled", "Form details reset back to original profile data.");
     }
   };
 

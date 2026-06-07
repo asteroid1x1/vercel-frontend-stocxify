@@ -127,7 +127,7 @@ function TradeCard({ trade }: { trade: Trade }) {
         </span>
 
         {/* Live streaming indicator */}
-        {trade.is_live_streaming !== false && (
+        {trade.is_live_streaming === true && (
           <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--green)]">
             {/* Pulsing dot */}
             <span className="relative flex h-2 w-2">
