@@ -125,12 +125,22 @@ export default function ProfilePage() {
 
       <div className="flex-1 p-8 bg-[#fafbfc] flex flex-col md:flex-row gap-8 overflow-y-auto">
         {/* ─── Left Sidebar Tabs (With icons) ─── */}
-        <div className="flex flex-col gap-1 w-full md:w-[220px] shrink-0">
+        <div
+          className="flex flex-col gap-1 w-full md:w-[220px] shrink-0"
+          role="tablist"
+          aria-label="Settings Tab list"
+        >
           {TABS.map((tab) => {
             const isActive = activeTab === tab.name;
+            const tabId = `tab-${tab.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+            const panelId = `panel-${tab.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
             return (
               <button
                 key={tab.name}
+                id={tabId}
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={panelId}
                 onClick={() => setActiveTab(tab.name)}
                 className={`flex items-center gap-3 rounded-lg px-4 py-2.5 text-[13.5px] font-semibold transition-all duration-150 text-left ${
                   isActive
@@ -149,189 +159,201 @@ export default function ProfilePage() {
         {/* ─── Right Content Card ─── */}
         <div className="flex-1 max-w-4xl bg-white rounded-xl border border-slate-100 shadow-sm p-8">
           {activeTab === "Profile Information" && (
-            <form onSubmit={handleSave} className="flex flex-col gap-6">
-              {/* Header */}
-              <div>
-                <h2 className="text-[17px] font-bold text-slate-800 leading-tight">
-                  Profile Information
-                </h2>
-                <p className="text-[13px] text-slate-400 mt-1">
-                  Update your photo and personal details here.
-                </p>
-              </div>
+            <div
+              role="tabpanel"
+              id="panel-profile-information"
+              aria-labelledby="tab-profile-information"
+              className="outline-none"
+            >
+              <form onSubmit={handleSave} className="flex flex-col gap-6">
+                {/* Header */}
+                <div>
+                  <h2 className="text-[17px] font-bold text-slate-800 leading-tight">
+                    Profile Information
+                  </h2>
+                  <p className="text-[13px] text-slate-400 mt-1">
+                    Update your photo and personal details here.
+                  </p>
+                </div>
 
-              <hr className="border-slate-100" />
+                <hr className="border-slate-100" />
 
-              {/* Avatar section */}
-              <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full overflow-hidden bg-[var(--brand)] flex items-center justify-center text-white text-[18px] font-bold shadow-sm border border-slate-100">
-                  {avatarUrl ? (
-                    <Image
-                      src={avatarUrl}
-                      alt="Avatar"
-                      width={56}
-                      height={56}
-                      className="w-full h-full object-cover"
+                {/* Avatar section */}
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full overflow-hidden bg-[var(--brand)] flex items-center justify-center text-white text-[18px] font-bold shadow-sm border border-slate-100">
+                    {avatarUrl ? (
+                      <Image
+                        src={avatarUrl}
+                        alt="Avatar"
+                        width={56}
+                        height={56}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      initials
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleCycleAvatar}
+                      className="px-4 py-1.5 border border-slate-200 rounded-lg text-[12.5px] font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+                      type="button"
+                    >
+                      Change Avatar
+                    </button>
+                    <button
+                      onClick={handleRemoveAvatar}
+                      className="px-3 py-1.5 text-red-500 text-[12.5px] font-bold hover:text-red-600 transition-colors cursor-pointer bg-transparent border-none"
+                      type="button"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+
+                {/* Form Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* First Name */}
+                  <div>
+                    <label
+                      htmlFor="firstName"
+                      className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
+                    >
+                      First Name
+                    </label>
+                    <input
+                      id="firstName"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm"
                     />
-                  ) : (
-                    initials
-                  )}
+                  </div>
+
+                  {/* Last Name */}
+                  <div>
+                    <label
+                      htmlFor="lastName"
+                      className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
+                    >
+                      Last Name
+                    </label>
+                    <input
+                      id="lastName"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex gap-2">
+                {/* Email Address */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
+                  >
+                    Email Address
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    value={profile?.email || ""}
+                    disabled
+                    className="w-full px-3 py-2 border border-slate-100 bg-[#f8fafc] rounded-lg text-[13.5px] text-slate-400 cursor-not-allowed focus:outline-none"
+                  />
+                  <span className="text-[11px] text-slate-400 mt-1 block">
+                    Email cannot be changed. Contact support for assistance.
+                  </span>
+                </div>
+
+                {/* Bio */}
+                <div>
+                  <label
+                    htmlFor="bio"
+                    className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
+                  >
+                    Professional Bio
+                  </label>
+                  <textarea
+                    id="bio"
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    className="w-full h-24 px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm resize-none"
+                    placeholder="Describe your credentials and approach..."
+                  />
+                </div>
+
+                {/* Social URLs Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {/* Twitter */}
+                  <div>
+                    <label
+                      htmlFor="twitter"
+                      className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
+                    >
+                      Twitter/X Profile URL
+                    </label>
+                    <input
+                      id="twitter"
+                      type="text"
+                      value={twitterUrl}
+                      onChange={(e) => setTwitterUrl(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm"
+                      placeholder="https://twitter.com/..."
+                    />
+                  </div>
+
+                  {/* LinkedIn */}
+                  <div>
+                    <label
+                      htmlFor="linkedin"
+                      className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
+                    >
+                      LinkedIn Profile URL
+                    </label>
+                    <input
+                      id="linkedin"
+                      type="text"
+                      value={linkedinUrl}
+                      onChange={(e) => setLinkedinUrl(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm"
+                      placeholder="https://linkedin.com/in/..."
+                    />
+                  </div>
+                </div>
+
+                <hr className="border-slate-100 mt-2" />
+
+                {/* Actions */}
+                <div className="flex justify-end gap-3">
                   <button
-                    onClick={handleCycleAvatar}
-                    className="px-4 py-1.5 border border-slate-200 rounded-lg text-[12.5px] font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+                    onClick={handleCancel}
+                    className="px-4 py-2 border border-slate-200 rounded-lg text-[13px] font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer bg-white"
                     type="button"
                   >
-                    Change Avatar
+                    Cancel
                   </button>
                   <button
-                    onClick={handleRemoveAvatar}
-                    className="px-3 py-1.5 text-red-500 text-[12.5px] font-bold hover:text-red-600 transition-colors cursor-pointer bg-transparent border-none"
-                    type="button"
+                    className="px-4 py-2 bg-[var(--brand)] hover:bg-[var(--brand-dark)] rounded-lg text-[13px] font-bold text-white transition-colors cursor-pointer shadow-sm shadow-[var(--brand)]/15"
+                    type="submit"
                   >
-                    Remove
+                    Save Changes
                   </button>
                 </div>
-              </div>
-
-              {/* Form Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* First Name */}
-                <div>
-                  <label
-                    htmlFor="firstName"
-                    className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
-                  >
-                    First Name
-                  </label>
-                  <input
-                    id="firstName"
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm"
-                  />
-                </div>
-
-                {/* Last Name */}
-                <div>
-                  <label
-                    htmlFor="lastName"
-                    className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
-                  >
-                    Last Name
-                  </label>
-                  <input
-                    id="lastName"
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm"
-                  />
-                </div>
-              </div>
-
-              {/* Email Address */}
-              <div>
-                <label
-                  htmlFor="email"
-                  className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
-                >
-                  Email Address
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  value={profile?.email || ""}
-                  disabled
-                  className="w-full px-3 py-2 border border-slate-100 bg-[#f8fafc] rounded-lg text-[13.5px] text-slate-400 cursor-not-allowed focus:outline-none"
-                />
-                <span className="text-[11px] text-slate-400 mt-1 block">
-                  Email cannot be changed. Contact support for assistance.
-                </span>
-              </div>
-
-              {/* Bio */}
-              <div>
-                <label
-                  htmlFor="bio"
-                  className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
-                >
-                  Professional Bio
-                </label>
-                <textarea
-                  id="bio"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  className="w-full h-24 px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm resize-none"
-                  placeholder="Describe your credentials and approach..."
-                />
-              </div>
-
-              {/* Social URLs Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {/* Twitter */}
-                <div>
-                  <label
-                    htmlFor="twitter"
-                    className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
-                  >
-                    Twitter/X Profile URL
-                  </label>
-                  <input
-                    id="twitter"
-                    type="text"
-                    value={twitterUrl}
-                    onChange={(e) => setTwitterUrl(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm"
-                    placeholder="https://twitter.com/..."
-                  />
-                </div>
-
-                {/* LinkedIn */}
-                <div>
-                  <label
-                    htmlFor="linkedin"
-                    className="text-[12.5px] font-bold text-slate-700 mb-1.5 block"
-                  >
-                    LinkedIn Profile URL
-                  </label>
-                  <input
-                    id="linkedin"
-                    type="text"
-                    value={linkedinUrl}
-                    onChange={(e) => setLinkedinUrl(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-[var(--brand)] transition-colors shadow-sm"
-                    placeholder="https://linkedin.com/in/..."
-                  />
-                </div>
-              </div>
-
-              <hr className="border-slate-100 mt-2" />
-
-              {/* Actions */}
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={handleCancel}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-[13px] font-bold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm cursor-pointer bg-white"
-                  type="button"
-                >
-                  Cancel
-                </button>
-                <button
-                  className="px-4 py-2 bg-[var(--brand)] hover:bg-[var(--brand-dark)] rounded-lg text-[13px] font-bold text-white transition-colors cursor-pointer shadow-sm shadow-[var(--brand)]/15"
-                  type="submit"
-                >
-                  Save Changes
-                </button>
-              </div>
-            </form>
+              </form>
+            </div>
           )}
 
           {activeTab === "SEBI Verification" && (
-            <div className="flex flex-col gap-6">
+            <div
+              role="tabpanel"
+              id="panel-sebi-verification"
+              aria-labelledby="tab-sebi-verification"
+              className="flex flex-col gap-6 outline-none"
+            >
               {/* Header */}
               <div>
                 <div className="flex items-center justify-between">
@@ -477,7 +499,12 @@ export default function ProfilePage() {
           )}
 
           {activeTab === "Bank & Payouts" && (
-            <div className="flex flex-col gap-6">
+            <div
+              role="tabpanel"
+              id="panel-bank-payouts"
+              aria-labelledby="tab-bank-payouts"
+              className="flex flex-col gap-6 outline-none"
+            >
               {/* Header */}
               <div>
                 <h2 className="text-[17px] font-bold text-slate-800 leading-tight">
@@ -669,7 +696,12 @@ export default function ProfilePage() {
           {activeTab !== "Profile Information" &&
             activeTab !== "SEBI Verification" &&
             activeTab !== "Bank & Payouts" && (
-              <div className="py-20 text-center flex flex-col items-center justify-center">
+              <div
+                role="tabpanel"
+                id={`panel-${activeTab.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                aria-labelledby={`tab-${activeTab.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
+                className="py-20 text-center flex flex-col items-center justify-center outline-none"
+              >
                 <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center mb-3">
                   <i className="fa-solid fa-gear text-slate-400 text-[18px] animate-spin" />
                 </div>

@@ -207,7 +207,16 @@ function SubscriberRow({ subscriber }: { subscriber: Subscriber }) {
         <div className="flex items-center gap-1.5 mt-0.5">
           <span className={`h-1.5 w-1.5 rounded-full ${planColor}`} />
           <span className="text-[11px] text-[var(--muted-2)]">
-            {subscriber.plan_name} · {subscriber.billing_cycle}
+            {subscriber.plan_name} ·{" "}
+            {subscriber.billing_cycle === "WEEK"
+              ? "Weekly"
+              : subscriber.billing_cycle === "MONTH"
+                ? "Monthly"
+                : subscriber.billing_cycle === "QUARTER"
+                  ? "Quarterly"
+                  : subscriber.billing_cycle === "YEAR"
+                    ? "Yearly"
+                    : subscriber.billing_cycle}
           </span>
         </div>
       </div>

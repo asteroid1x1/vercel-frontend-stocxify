@@ -70,7 +70,7 @@ export const MOCK_SUBSCRIBERS: Subscriber[] = [
     user_id: "u_1",
     user_name: "Arjun Sharma",
     plan_name: "Premium",
-    billing_cycle: "Monthly",
+    billing_cycle: "MONTH",
     status: "ACTIVE",
     subscribed_at: new Date(Date.now() - 3600_000 * 2).toISOString(),
   },
@@ -79,7 +79,7 @@ export const MOCK_SUBSCRIBERS: Subscriber[] = [
     user_id: "u_2",
     user_name: "Priya Patel",
     plan_name: "Pro",
-    billing_cycle: "Monthly",
+    billing_cycle: "MONTH",
     status: "ACTIVE",
     subscribed_at: new Date(Date.now() - 3600_000 * 5).toISOString(),
   },
@@ -88,7 +88,7 @@ export const MOCK_SUBSCRIBERS: Subscriber[] = [
     user_id: "u_3",
     user_name: "Vikram Singh",
     plan_name: "Basic",
-    billing_cycle: "Monthly",
+    billing_cycle: "MONTH",
     status: "ACTIVE",
     subscribed_at: new Date(Date.now() - 3600_000 * 24).toISOString(),
   },
@@ -97,7 +97,7 @@ export const MOCK_SUBSCRIBERS: Subscriber[] = [
     user_id: "u_4",
     user_name: "Ananya Iyer",
     plan_name: "Premium",
-    billing_cycle: "Monthly",
+    billing_cycle: "MONTH",
     status: "ACTIVE",
     subscribed_at: new Date(Date.now() - 3600_000 * 48).toISOString(),
   },
@@ -106,7 +106,7 @@ export const MOCK_SUBSCRIBERS: Subscriber[] = [
     user_id: "u_5",
     user_name: "Kabir Mehta",
     plan_name: "Pro",
-    billing_cycle: "Monthly",
+    billing_cycle: "MONTH",
     status: "ACTIVE",
     subscribed_at: new Date(Date.now() - 3600_000 * 72).toISOString(),
   },
@@ -354,11 +354,6 @@ export function getMockPlansStats(): SubscriptionPlansStats {
 
   // Calculate MRR
   let mrr = 0;
-
-  // Check if default plans are active
-  const isBasicActive = MOCK_PLANS.find((p) => p.name === "Basic Monthly")?.status === "ACTIVE";
-  const isQuarterlyActive = MOCK_PLANS.find((p) => p.name === "Quarterly Pro")?.status === "ACTIVE";
-  const isAnnualActive = MOCK_PLANS.find((p) => p.name === "Annual Premium")?.status === "ACTIVE";
 
   activePlans.forEach((plan) => {
     let monthlyPrice = plan.price;

@@ -220,7 +220,7 @@ export default function SubscriptionPlansPage() {
                   </div>
 
                   {/* Divider */}
-                  <div className="my-4.5 border-t border-[var(--line)]" />
+                  <div className="my-5 border-t border-[var(--line)]" />
 
                   {/* Mini-Stats Grid */}
                   <div className="grid grid-cols-2 gap-4">
@@ -243,7 +243,7 @@ export default function SubscriptionPlansPage() {
                   </div>
 
                   {/* Divider */}
-                  <div className="my-4.5 border-t border-[var(--line)]" />
+                  <div className="my-5 border-t border-[var(--line)]" />
 
                   {/* Actions Row */}
                   <div className="flex items-center gap-3 mt-auto">

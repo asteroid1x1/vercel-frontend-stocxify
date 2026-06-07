@@ -157,8 +157,6 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
         entry_price: entry,
         target_price: target,
         stop_loss_price: sl,
-        ltp: entry,
-        ltp_change_pct: 0.0,
         risk_pct: Math.round(riskVal * 1000) / 10,
         reward_pct: Math.round(rewardVal * 1000) / 10,
         pnl_pct: 0.0,

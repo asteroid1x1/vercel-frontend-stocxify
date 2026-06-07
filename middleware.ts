@@ -4,7 +4,9 @@ import { adminCookieNames } from "@/lib/admin/cookies";
 import { adminSecurityHeaders } from "@/lib/admin/security-headers";
 import { jwtVerify } from "jose";
 
-const MOCK_SECRET = new TextEncoder().encode("mock_stoxify_secret_key_123!");
+const MOCK_SECRET = new TextEncoder().encode(
+  process.env.JWT_SECRET || "mock_stoxify_secret_key_123!"
+);
 
 function withAdminHeaders(response: NextResponse): NextResponse {
   for (const [key, value] of Object.entries(adminSecurityHeaders)) {
@@ -53,7 +55,7 @@ export async function middleware(request: NextRequest) {
       await jwtVerify(token, MOCK_SECRET);
       // Valid token, proceed and apply security headers
       return withAdminHeaders(NextResponse.next());
-    } catch (err) {
+    } catch {
       // Invalid token → redirect to login
       const loginUrl = new URL("/login", request.url);
       loginUrl.searchParams.set("next", pathname);

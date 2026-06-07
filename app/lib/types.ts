@@ -100,7 +100,6 @@ export interface LiveTradesStats {
 // ─── Subscribers ──────────────────────────────────────────────────────────────
 
 export type PlanTier = "Basic" | "Pro" | "Premium";
-export type BillingCycle = "Monthly" | "Yearly";
 export type SubscriptionStatus = "ACTIVE" | "EXPIRED" | "CANCELLED";
 
 export interface Subscriber {
@@ -109,7 +108,7 @@ export interface Subscriber {
   user_name: string;
   user_avatar?: string;
   plan_name: PlanTier;
-  billing_cycle: BillingCycle;
+  billing_cycle: PlanBillingCycle;
   status: SubscriptionStatus;
   subscribed_at: string;
 }

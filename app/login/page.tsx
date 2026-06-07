@@ -93,7 +93,9 @@ export default function LoginPage() {
       setSubmittedData(output);
 
       // Generate a mock JWT for the middleware to validate
-      const secret = new TextEncoder().encode("mock_stoxify_secret_key_123!");
+      const secret = new TextEncoder().encode(
+        process.env.NEXT_PUBLIC_JWT_SECRET || "mock_stoxify_secret_key_123!"
+      );
       const mockToken = await new SignJWT({ email: formData.email })
         .setProtectedHeader({ alg: "HS256" })
         .setExpirationTime("24h")
