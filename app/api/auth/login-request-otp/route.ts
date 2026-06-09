@@ -58,7 +58,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       body: { identifier: body.identifier.trim() },
       extraHeaders: forwardedIpHeaders(request),
     });
-  } catch {
+  } catch (error) {
+    console.error("[login-request-otp] signedBackendFetch failed:", error);
     return NextResponse.json(
       { error: "Unable to reach the auth service", code: "SERVICE_UNAVAILABLE" },
       { status: 503 }

@@ -66,7 +66,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     response = await signedBackendFetch({
       baseUrl: backendUrls.user,
-      path: "/analysts/onboard",
+      path: "/users/analysts/onboard",
       method: "POST",
       deviceId,
       body: {

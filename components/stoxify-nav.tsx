@@ -69,10 +69,14 @@ function readCookieNavUser(): Exclude<NavUser, null> | null {
 }
 
 function useNavUser(): NavUser {
-  const [user, setUser] = useState<NavUser>(() => readCookieNavUser());
+  const [user, setUser] = useState<NavUser>(null);
 
   useEffect(() => {
-    if (user) return;
+    const cookieUser = readCookieNavUser();
+    if (cookieUser) {
+      setUser(cookieUser);
+      return;
+    }
 
     const controller = new AbortController();
 
@@ -94,7 +98,7 @@ function useNavUser(): NavUser {
       });
 
     return () => controller.abort();
-  }, [user]);
+  }, []);
 
   return user;
 }
@@ -195,7 +199,7 @@ export function StoxifyNav({
         <div className="ml-auto flex items-center gap-2 max-[860px]:ml-0">
           {navUser ? (
             <Link
-              href="/dashboard"
+              href="/trader/dashboard"
               title={navUserLabel}
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-extrabold text-white hover:opacity-90 transition-opacity select-none max-[860px]:hidden"
             >
@@ -209,7 +213,7 @@ export function StoxifyNav({
               Log In
             </Link>
           )}
-          <Link className={ctaClass} href={navUser ? "/dashboard" : ctaHref}>
+          <Link className={ctaClass} href={navUser ? "/trader/dashboard" : ctaHref}>
             {navUser ? "Dashboard" : ctaLabel}
             <Icon className="h-3.5 w-3.5" name="arrowRight" />
           </Link>

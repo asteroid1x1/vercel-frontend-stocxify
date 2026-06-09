@@ -123,7 +123,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const response = NextResponse.json({
     ok: true,
     user: data.user,
-    redirectTo: "/dashboard",
+    redirectTo: "/trader/dashboard",
   });
 
   writeUserTokenCookies(response, {

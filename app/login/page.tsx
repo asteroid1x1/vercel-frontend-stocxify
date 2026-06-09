@@ -144,7 +144,7 @@ export default function LoginPage() {
 
       const params = new URLSearchParams(window.location.search);
       const next = params.get("next");
-      const destination = next && next.startsWith("/") ? next : (data.redirectTo ?? "/dashboard");
+      const destination = next && next.startsWith("/") ? next : (data.redirectTo ?? "/trader/dashboard");
       router.push(destination);
       router.refresh();
     } catch {
@@ -255,7 +255,13 @@ export default function LoginPage() {
                     id="identifier"
                     name="identifier"
                     onChange={(e) => {
-                      setIdentifier(e.target.value);
+                      let val = e.target.value;
+                      if (/^\d+$/.test(val)) {
+                        val = val.slice(0, 10);
+                      } else if (/^\+\d*$/.test(val)) {
+                        val = val.slice(0, 13);
+                      }
+                      setIdentifier(val);
                       if (fieldErrors.identifier) setFieldErrors({});
                     }}
                     placeholder="10-digit mobile or name@example.com"

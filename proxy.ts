@@ -11,7 +11,7 @@ function withAdminHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-const USER_PROTECTED_PREFIXES = ["/dashboard", "/account", "/trades"];
+const USER_PROTECTED_PREFIXES = ["/dashboard", "/account", "/trades", "/trader"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -45,5 +45,6 @@ export const config = {
     "/dashboard/:path*",
     "/account/:path*",
     "/trades/:path*",
+    "/trader/:path*",
   ],
 };
