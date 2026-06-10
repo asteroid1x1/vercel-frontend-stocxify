@@ -17,6 +17,8 @@ export type IconName =
   | "lineChart"
   | "listChecks"
   | "lock"
+  | "mail"
+  | "phone"
   | "receipt"
   | "scale"
   | "search"
@@ -59,6 +61,8 @@ const icons: Record<IconName, string> = {
   lineChart: "fa-solid fa-chart-line",
   listChecks: "fa-solid fa-list-check",
   lock: "fa-solid fa-lock",
+  mail: "fa-solid fa-envelope",
+  phone: "fa-solid fa-phone",
   receipt: "fa-solid fa-receipt",
   scale: "fa-solid fa-scale-balanced",
   search: "fa-solid fa-magnifying-glass",
