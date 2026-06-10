@@ -103,9 +103,6 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
   } catch (err) {
     const errorMessage = err instanceof Error ? err.message : "Unable to reach the user service";
     console.error("Profile update failed:", err);
-    return NextResponse.json(
-      { error: errorMessage, code: "SERVICE_UNAVAILABLE" },
-      { status: 503 }
-    );
+    return NextResponse.json({ error: errorMessage, code: "SERVICE_UNAVAILABLE" }, { status: 503 });
   }
 }

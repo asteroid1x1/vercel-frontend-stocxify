@@ -319,7 +319,8 @@ export function TraderProfile({ user }: { user: ProfileUser }) {
       // Auto-fetch subscriptions again if status shifts to ACTIVE
       fetchProfileSubscriptions();
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred during KYC.";
+      const errorMessage =
+        err instanceof Error ? err.message : "An unexpected error occurred during KYC.";
       setKycError(errorMessage);
     } finally {
       setSubmittingKyc(false);

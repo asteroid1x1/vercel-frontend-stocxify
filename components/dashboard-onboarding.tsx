@@ -68,7 +68,10 @@ export function DashboardOnboarding({ user }: { user: OnboardingUser }) {
         window.location.reload();
       }, 1500);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred during KYC verification.";
+      const errorMessage =
+        err instanceof Error
+          ? err.message
+          : "An unexpected error occurred during KYC verification.";
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
