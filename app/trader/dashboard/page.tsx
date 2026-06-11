@@ -12,7 +12,7 @@ export default async function TraderDashboardPage() {
   const session = await readUserSessionFromCookies();
 
   if (!session.authenticated) {
-    redirect("/login?next=/trader/dashboard");
+    redirect("/");
   }
 
   // If user hasn't completed KYC, show onboarding

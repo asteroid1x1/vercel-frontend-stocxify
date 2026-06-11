@@ -21,7 +21,7 @@ export function LogoutButton({ className, children }: LogoutButtonProps) {
         cache: "no-store",
       });
     } finally {
-      router.push("/login");
+      router.push("/");
       router.refresh();
     }
   };

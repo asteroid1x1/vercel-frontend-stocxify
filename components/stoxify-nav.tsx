@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { userCookieNames } from "@/lib/auth/cookies";
 
 import { Icon } from "./stoxify-icon";
+import { LoginModal } from "./login-modal";
 
 type NavUser = {
   user_id?: string;
@@ -121,6 +122,7 @@ export function StoxifyNav({
   ctaVariant?: "primary" | "orange";
 }) {
   const [open, setOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const navUser = useNavUser();
   const navUserLabel = navUser ? getUserLabel(navUser) : "";
 
@@ -208,19 +210,28 @@ export function StoxifyNav({
               {getInitials(navUserLabel)}
             </Link>
           ) : (
-            <Link
+            <button
               className="inline-flex items-center justify-center gap-2 rounded border border-[var(--line)] bg-transparent px-5 py-[9px] text-[13px] font-medium text-[var(--muted)] transition-colors hover:border-[var(--muted-2)] hover:bg-[var(--line-2)] hover:text-[var(--ink)] max-[860px]:hidden"
-              href="/login"
+              onClick={() => setLoginOpen(true)}
+              type="button"
             >
               Log In
+            </button>
+          )}
+          {!navUser && active === "home" ? null : !navUser && ctaHref === "/signup" ? (
+            <button className={ctaClass} onClick={() => setLoginOpen(true)} type="button">
+              {ctaLabel}
+              <Icon className="h-3.5 w-3.5" name="arrowRight" />
+            </button>
+          ) : (
+            <Link className={ctaClass} href={navUser ? "/trader/dashboard" : ctaHref}>
+              {navUser ? "Dashboard" : ctaLabel}
+              <Icon className="h-3.5 w-3.5" name="arrowRight" />
             </Link>
           )}
-          <Link className={ctaClass} href={navUser ? "/trader/dashboard" : ctaHref}>
-            {navUser ? "Dashboard" : ctaLabel}
-            <Icon className="h-3.5 w-3.5" name="arrowRight" />
-          </Link>
         </div>
       </div>
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </nav>
   );
 }

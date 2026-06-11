@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
         </p>
         <Link
           className="inline-block rounded-lg bg-[var(--brand)] px-5 py-2.5 text-[13.5px] font-bold text-white hover:bg-[var(--brand-dark)] transition-colors"
-          href="/login"
+          href="/"
         >
           Back to Login
         </Link>

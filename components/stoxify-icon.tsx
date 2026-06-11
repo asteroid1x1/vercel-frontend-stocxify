@@ -8,6 +8,7 @@ export type IconName =
   | "banknote"
   | "check"
   | "chevronRight"
+  | "chevronDown"
   | "creditCard"
   | "fileBadge"
   | "fileText"
@@ -38,7 +39,9 @@ export type IconName =
   | "eye"
   | "eyeOff"
   | "google"
-  | "apple";
+  | "apple"
+  | "helpCircle"
+  | "headset";
 
 const icons: Record<IconName, string> = {
   arrowRight: "fa-solid fa-arrow-right",
@@ -48,6 +51,7 @@ const icons: Record<IconName, string> = {
   bell: "fa-solid fa-bell",
   check: "fa-solid fa-check",
   chevronRight: "fa-solid fa-chevron-right",
+  chevronDown: "fa-solid fa-chevron-down",
   creditCard: "fa-solid fa-credit-card",
   eye: "fa-solid fa-eye",
   eyeOff: "fa-solid fa-eye-slash",
@@ -79,6 +83,8 @@ const icons: Record<IconName, string> = {
   wallet: "fa-solid fa-wallet",
   x: "fa-solid fa-xmark",
   zap: "fa-solid fa-bolt",
+  helpCircle: "fa-solid fa-circle-question",
+  headset: "fa-solid fa-headset",
 };
 
 function getFontSize(className?: string): CSSProperties["fontSize"] {

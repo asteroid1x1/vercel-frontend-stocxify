@@ -115,7 +115,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Signup OTP step is rendered inline by the signup form, which then calls
   // /api/auth/login-verify-otp to log the new analyst in directly.
-  const redirectTo = "/login";
+  const redirectTo = "/";
 
   const nextResponse = NextResponse.json({ ok: true, redirectTo });
   nextResponse.cookies.set(userCookieNames.deviceId, deviceId, {
