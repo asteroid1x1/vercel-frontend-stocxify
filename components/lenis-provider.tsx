@@ -14,8 +14,6 @@ export function LenisProvider({ children }: { children: ReactNode }) {
     pathname.startsWith("/admin") ||
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/account") ||
-    pathname.startsWith("/signup") ||
-    pathname.startsWith("/login") ||
     pathname.startsWith("/forgot-password");
 
   if (isAppShell) {
