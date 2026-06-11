@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { AuthPanel } from "@/components/auth-panel";
 import { Icon } from "@/components/stoxify-icon";
+import { AnalystLoginModal } from "@/components/analyst-login-modal";
 
 type Step = "identifier" | "otp";
 
@@ -41,6 +42,25 @@ export default function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
   const [authError, setAuthError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showAnalystModal, setShowAnalystModal] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("role") === "analyst") {
+      setShowAnalystModal(true);
+    }
+  }, []);
+
+  const handleCloseAnalystModal = () => {
+    setShowAnalystModal(false);
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("role") === "analyst") {
+      params.delete("role");
+      const newSearch = params.toString();
+      const newUrl = window.location.pathname + (newSearch ? `?${newSearch}` : "");
+      router.replace(newUrl);
+    }
+  };
 
   // OTP state
   const [otp, setOtp] = useState<string[]>(() => Array.from({ length: 6 }, () => ""));
@@ -220,7 +240,23 @@ export default function LoginPage() {
         </div>
 
         <div className="my-auto mx-auto w-full max-w-[400px]">
-          {step === "identifier" ? (
+          {showAnalystModal ? (
+            <div className="text-center py-12 bg-white rounded-2xl border border-[var(--line)] p-8 shadow-sm">
+              <span className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--brand)] border-t-transparent inline-block mb-4" />
+              <h2 className="text-lg font-bold text-[var(--ink)]">Research Analyst Verification</h2>
+              <p className="text-xs text-[var(--muted)] mt-1.5 leading-relaxed">
+                Please complete the authentication steps in the verification pop-up modal to access your account.
+              </p>
+              <button
+                type="button"
+                onClick={handleCloseAnalystModal}
+                className="mt-6 text-xs font-bold text-[var(--brand)] hover:underline inline-flex items-center gap-1"
+              >
+                <Icon className="h-3 w-3" name="arrowLeft" />
+                Back to Trader Login
+              </button>
+            </div>
+          ) : step === "identifier" ? (
             <>
               <div className="mb-6">
                 <h1 className="text-2xl font-bold tracking-[-0.5px] text-[var(--ink)] mb-1.5">
@@ -291,6 +327,17 @@ export default function LoginPage() {
                     "Send code"
                   )}
                 </button>
+
+                <div className="text-center pt-2 text-[12.5px] text-[var(--muted)]">
+                  Are you a Research Analyst?{" "}
+                  <button
+                    type="button"
+                    onClick={() => setShowAnalystModal(true)}
+                    className="font-bold text-[var(--brand)] hover:underline"
+                  >
+                    Log in here
+                  </button>
+                </div>
               </form>
             </>
           ) : (
@@ -387,13 +434,16 @@ export default function LoginPage() {
         </div>
 
         {/* FOOTER */}
-        <div className="mt-8 text-center text-[13px] text-[var(--muted)]">
-          New to Stoxify?{" "}
-          <Link className="font-semibold text-[var(--brand)] hover:underline" href="/signup">
-            Create an account
-          </Link>
-        </div>
+        {!showAnalystModal && (
+          <div className="mt-8 text-center text-[13px] text-[var(--muted)]">
+            New to Stoxify?{" "}
+            <Link className="font-semibold text-[var(--brand)] hover:underline" href="/signup">
+              Create an account
+            </Link>
+          </div>
+        )}
       </div>
+      <AnalystLoginModal isOpen={showAnalystModal} onClose={handleCloseAnalystModal} />
     </main>
   );
 }

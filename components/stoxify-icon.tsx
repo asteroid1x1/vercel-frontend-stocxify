@@ -2,6 +2,7 @@ import type { CSSProperties, HTMLAttributes } from "react";
 
 export type IconName =
   | "arrowRight"
+  | "arrowLeft"
   | "barChart"
   | "bell"
   | "badge"
@@ -38,10 +39,39 @@ export type IconName =
   | "eye"
   | "eyeOff"
   | "google"
-  | "apple";
+  | "apple"
+  | "layoutDashboard"
+  | "activity"
+  | "gear"
+  | "logout"
+  | "circleCheck"
+  | "plus"
+  | "chevronDown"
+  | "user"
+  | "bank"
+  | "download"
+  | "rupee"
+  | "edit"
+  | "ban"
+  | "power";
 
 const icons: Record<IconName, string> = {
+  layoutDashboard: "fa-solid fa-table-columns",
+  activity: "fa-solid fa-bolt",
+  gear: "fa-solid fa-gear",
+  logout: "fa-solid fa-right-from-bracket",
+  circleCheck: "fa-solid fa-circle-check",
+  plus: "fa-solid fa-plus",
+  chevronDown: "fa-solid fa-chevron-down",
+  user: "fa-solid fa-user",
+  bank: "fa-solid fa-building-columns",
+  download: "fa-solid fa-download",
+  rupee: "fa-solid fa-indian-rupee-sign",
+  edit: "fa-solid fa-pen",
+  ban: "fa-solid fa-ban",
+  power: "fa-solid fa-power-off",
   arrowRight: "fa-solid fa-arrow-right",
+  arrowLeft: "fa-solid fa-arrow-left",
   barChart: "fa-solid fa-chart-column",
   badge: "fa-solid fa-certificate",
   banknote: "fa-solid fa-money-bill-wave",

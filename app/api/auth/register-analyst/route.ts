@@ -19,6 +19,7 @@ type RegisterAnalystRequestBody = {
   registration_type?: "research_analyst" | "investment_advisors";
   asset_under_research_cr?: number;
   number_of_clients?: number;
+  registration_token?: string;
 };
 
 const ERROR_MAP: Record<string, string> = {
@@ -51,7 +52,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     !body.business_type ||
     !body.registration_type ||
     body.asset_under_research_cr === undefined ||
-    body.number_of_clients === undefined
+    body.number_of_clients === undefined ||
+    !body.registration_token
   ) {
     return NextResponse.json(
       { error: "All required registration details must be filled", code: "BAD_REQUEST" },
@@ -82,6 +84,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         registration_type: body.registration_type,
         asset_under_research_cr: Number(body.asset_under_research_cr),
         number_of_clients: Number(body.number_of_clients),
+        registration_token: body.registration_token,
       },
       extraHeaders: forwardedIpHeaders(request),
     });
@@ -93,9 +96,17 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const data = (await response.json().catch(() => ({}))) as {
-    user_id?: string;
-    email?: string;
-    state?: string;
+    access_token?: string;
+    refresh_token?: string;
+    session_id?: string;
+    user?: {
+      user_id?: string;
+      name?: string;
+      email?: string;
+      phone?: string;
+      state?: string;
+      user_type?: string;
+    };
     error?: string;
     message?: string;
     code?: string;
@@ -113,18 +124,30 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: userMessage, code }, { status: response.status || 400 });
   }
 
-  // Signup OTP step is rendered inline by the signup form, which then calls
-  // /api/auth/login-verify-otp to log the new analyst in directly.
-  const redirectTo = "/login";
-
+  // Write tokens and redirect to dashboard
+  const redirectTo = "/analyst-dashboard";
   const nextResponse = NextResponse.json({ ok: true, redirectTo });
-  nextResponse.cookies.set(userCookieNames.deviceId, deviceId, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 365,
-  });
+
+  if (data.access_token) {
+    import("@/lib/auth/server-session").then(({ writeUserTokenCookies }) => {
+      writeUserTokenCookies(nextResponse, {
+        access_token: data.access_token!,
+        refresh_token: data.refresh_token,
+        session_id: data.session_id,
+        device_id: deviceId,
+        user: data.user,
+      });
+    });
+  } else {
+    // Just in case it doesn't return tokens directly, set deviceId anyway
+    nextResponse.cookies.set(userCookieNames.deviceId, deviceId, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
+    });
+  }
 
   return nextResponse;
 }

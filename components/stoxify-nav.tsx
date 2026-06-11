@@ -6,12 +6,14 @@ import { useEffect, useState } from "react";
 import { userCookieNames } from "@/lib/auth/cookies";
 
 import { Icon } from "./stoxify-icon";
+import { AnalystLoginModal } from "./analyst-login-modal";
 
 type NavUser = {
   user_id?: string;
   name?: string;
   email?: string;
   phone?: string;
+  user_type?: string;
 } | null;
 
 function getUserLabel(user: Exclude<NavUser, null>): string {
@@ -46,6 +48,7 @@ function normalizeNavUser(value: unknown): Exclude<NavUser, null> | null {
     name: typeof candidate.name === "string" ? candidate.name : "",
     email: typeof candidate.email === "string" ? candidate.email : "",
     phone: typeof candidate.phone === "string" ? candidate.phone : "",
+    user_type: typeof candidate.user_type === "string" ? candidate.user_type : "",
   };
   return user.name || user.email || user.phone || user.user_id ? user : null;
 }
@@ -121,6 +124,7 @@ export function StoxifyNav({
   ctaVariant?: "primary" | "orange";
 }) {
   const [open, setOpen] = useState(false);
+  const [isAnalystModalOpen, setIsAnalystModalOpen] = useState(false);
   const navUser = useNavUser();
   const navUserLabel = navUser ? getUserLabel(navUser) : "";
 
@@ -201,9 +205,9 @@ export function StoxifyNav({
         <div className="ml-auto flex items-center gap-2 max-[860px]:ml-0">
           {navUser ? (
             <Link
-              href="/trader/dashboard"
+              href={navUser.user_type === "ANALYST" ? "/dashboard" : "/trader/dashboard"}
               title={navUserLabel}
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-extrabold text-white hover:opacity-90 transition-opacity select-none max-[860px]:hidden"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-extrabold text-white hover:opacity-90 transition-opacity select-none"
             >
               {getInitials(navUserLabel)}
             </Link>
@@ -211,16 +215,32 @@ export function StoxifyNav({
             <Link
               className="inline-flex items-center justify-center gap-2 rounded border border-[var(--line)] bg-transparent px-5 py-[9px] text-[13px] font-medium text-[var(--muted)] transition-colors hover:border-[var(--muted-2)] hover:bg-[var(--line-2)] hover:text-[var(--ink)] max-[860px]:hidden"
               href="/login"
+              onClick={(e) => {
+                if (active === "analysts") {
+                  e.preventDefault();
+                  setIsAnalystModalOpen(true);
+                }
+              }}
             >
               Log In
             </Link>
           )}
-          <Link className={ctaClass} href={navUser ? "/trader/dashboard" : ctaHref}>
-            {navUser ? "Dashboard" : ctaLabel}
+          <Link
+            className={ctaClass}
+            href={
+              navUser
+                ? navUser.user_type === "ANALYST"
+                  ? "/dashboard"
+                  : "/trader/dashboard"
+                : ctaHref
+            }
+          >
+            {navUser ? (navUser.user_type === "ANALYST" ? "RA Home" : "Dashboard") : ctaLabel}
             <Icon className="h-3.5 w-3.5" name="arrowRight" />
           </Link>
         </div>
       </div>
+      <AnalystLoginModal isOpen={isAnalystModalOpen} onClose={() => setIsAnalystModalOpen(false)} />
     </nav>
   );
 }
