@@ -133,9 +133,27 @@ function AnalystOnboardingForm() {
         {/* Abstract subtle line waves background matching the image */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
           <svg className="absolute w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-            <path d="M0,20 C30,10 60,40 100,10" fill="none" stroke="white" strokeWidth="0.2" vectorEffect="non-scaling-stroke" />
-            <path d="M-10,80 C40,90 50,20 110,60" fill="none" stroke="white" strokeWidth="0.2" vectorEffect="non-scaling-stroke" />
-            <path d="M30,-10 C40,40 20,80 80,110" fill="none" stroke="white" strokeWidth="0.2" vectorEffect="non-scaling-stroke" />
+            <path
+              d="M0,20 C30,10 60,40 100,10"
+              fill="none"
+              stroke="white"
+              strokeWidth="0.2"
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              d="M-10,80 C40,90 50,20 110,60"
+              fill="none"
+              stroke="white"
+              strokeWidth="0.2"
+              vectorEffect="non-scaling-stroke"
+            />
+            <path
+              d="M30,-10 C40,40 20,80 80,110"
+              fill="none"
+              stroke="white"
+              strokeWidth="0.2"
+              vectorEffect="non-scaling-stroke"
+            />
           </svg>
         </div>
 
@@ -148,19 +166,35 @@ function AnalystOnboardingForm() {
           <div className="mt-auto mb-16">
             <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mb-6 leading-[1.1]">
               Elevate your <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">research</span>.
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white to-blue-200">
+                research
+              </span>
+              .
             </h1>
             <p className="text-[16px] text-white/80 font-medium leading-relaxed max-w-[400px]">
-              Join India's premier platform for SEBI Registered Research Analysts. Publish insights, grow your subscriber base, and monetize your expertise securely.
+              Join India&apos;s premier platform for SEBI Registered Research Analysts. Publish
+              insights, grow your subscriber base, and monetize your expertise securely.
             </p>
           </div>
 
           {/* Value props */}
           <div className="space-y-6 mt-auto">
             {[
-              { icon: "shieldCheck" as const, title: "SEBI Compliant", desc: "Built with regulatory guidelines in mind." },
-              { icon: "users" as const, title: "Audience Growth", desc: "Reach thousands of active traders directly." },
-              { icon: "banknote" as const, title: "Instant Payouts", desc: "Zero hidden fees on your subscription revenue." }
+              {
+                icon: "shieldCheck" as const,
+                title: "SEBI Compliant",
+                desc: "Built with regulatory guidelines in mind.",
+              },
+              {
+                icon: "users" as const,
+                title: "Audience Growth",
+                desc: "Reach thousands of active traders directly.",
+              },
+              {
+                icon: "banknote" as const,
+                title: "Instant Payouts",
+                desc: "Zero hidden fees on your subscription revenue.",
+              },
             ].map((feature, i) => (
               <div key={i} className="flex items-start gap-4">
                 <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center shrink-0 border border-white/5">
@@ -181,8 +215,12 @@ function AnalystOnboardingForm() {
         <div className="flex-1 flex items-center justify-center p-6 md:p-12">
           <div className="w-full max-w-lg">
             <div className="mb-10">
-              <h2 className="text-2xl font-extrabold text-[var(--ink)] tracking-tight mb-2">Complete your profile</h2>
-              <p className="text-[14px] text-[var(--muted)] font-medium">Please provide your professional details to finalize registration.</p>
+              <h2 className="text-2xl font-extrabold text-[var(--ink)] tracking-tight mb-2">
+                Complete your profile
+              </h2>
+              <p className="text-[14px] text-[var(--muted)] font-medium">
+                Please provide your professional details to finalize registration.
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -195,11 +233,11 @@ function AnalystOnboardingForm() {
                     type="text"
                     placeholder="Name as per SEBI records"
                     value={registerData.name}
-                    onChange={(e) => setRegisterData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setRegisterData((prev) => ({ ...prev, name: e.target.value }))}
                     className={`w-full rounded-xl border px-4 py-3.5 text-[14px] transition-all focus:outline-none ${
-                      fieldErrors.name 
-                        ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                        : 'border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                      fieldErrors.name
+                        ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                        : "border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                     }`}
                   />
                   {fieldErrors.name && (
@@ -232,11 +270,13 @@ function AnalystOnboardingForm() {
                       type="email"
                       placeholder="Official email"
                       value={registerData.email}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({ ...prev, email: e.target.value }))
+                      }
                       className={`w-full rounded-xl border px-4 py-3.5 text-[14px] transition-all focus:outline-none ${
-                        fieldErrors.email 
-                          ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                          : 'border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                        fieldErrors.email
+                          ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                          : "border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                       }`}
                     />
                     {fieldErrors.email && (
@@ -257,11 +297,16 @@ function AnalystOnboardingForm() {
                       type="text"
                       placeholder="e.g. INH000000000"
                       value={registerData.sebiLicenseNumber}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, sebiLicenseNumber: e.target.value.toUpperCase() }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({
+                          ...prev,
+                          sebiLicenseNumber: e.target.value.toUpperCase(),
+                        }))
+                      }
                       className={`w-full rounded-xl border pl-11 pr-4 py-3.5 text-[14px] transition-all focus:outline-none uppercase font-semibold tracking-wide ${
-                        fieldErrors.sebiLicenseNumber 
-                          ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                          : 'border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                        fieldErrors.sebiLicenseNumber
+                          ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                          : "border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                       }`}
                     />
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--muted)]">
@@ -285,11 +330,13 @@ function AnalystOnboardingForm() {
                       type="text"
                       placeholder="e.g. Stoxify Advisory"
                       value={registerData.companyName}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, companyName: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({ ...prev, companyName: e.target.value }))
+                      }
                       className={`w-full rounded-xl border px-4 py-3.5 text-[14px] transition-all focus:outline-none ${
-                        fieldErrors.companyName 
-                          ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                          : 'border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                        fieldErrors.companyName
+                          ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                          : "border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                       }`}
                     />
                     {fieldErrors.companyName && (
@@ -307,11 +354,13 @@ function AnalystOnboardingForm() {
                       type="text"
                       placeholder="e.g. Mumbai"
                       value={registerData.companyLocation}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, companyLocation: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({ ...prev, companyLocation: e.target.value }))
+                      }
                       className={`w-full rounded-xl border px-4 py-3.5 text-[14px] transition-all focus:outline-none ${
-                        fieldErrors.companyLocation 
-                          ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                          : 'border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                        fieldErrors.companyLocation
+                          ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                          : "border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                       }`}
                     />
                     {fieldErrors.companyLocation && (
@@ -330,17 +379,23 @@ function AnalystOnboardingForm() {
                     </label>
                     <select
                       value={registerData.businessType}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, businessType: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({ ...prev, businessType: e.target.value }))
+                      }
                       className={`w-full rounded-xl border px-4 py-3.5 text-[14px] transition-all focus:outline-none appearance-none bg-[var(--bg)] ${
-                        fieldErrors.businessType 
-                          ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                          : 'border-[var(--line)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                        fieldErrors.businessType
+                          ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                          : "border-[var(--line)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                       }`}
                     >
-                      <option value="" disabled>Select business type</option>
+                      <option value="" disabled>
+                        Select business type
+                      </option>
                       <option value="Individual">Individual</option>
                       <option value="Partnership Firm">Partnership Firm</option>
-                      <option value="Limited Liability Partnership">Limited Liability Partnership</option>
+                      <option value="Limited Liability Partnership">
+                        Limited Liability Partnership
+                      </option>
                       <option value="Body Corporate">Body Corporate</option>
                     </select>
                     {fieldErrors.businessType && (
@@ -352,13 +407,18 @@ function AnalystOnboardingForm() {
                   </div>
                   <div>
                     <label className="block text-[12px] font-bold uppercase tracking-[0.05em] text-[var(--muted)] mb-1.5">
-                      Website <span className="text-[10px] lowercase text-[var(--muted-2)] font-medium tracking-normal ml-1">(optional)</span>
+                      Website{" "}
+                      <span className="text-[10px] lowercase text-[var(--muted-2)] font-medium tracking-normal ml-1">
+                        (optional)
+                      </span>
                     </label>
                     <input
                       type="url"
                       placeholder="e.g. https://stoxify.com"
                       value={registerData.website}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, website: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({ ...prev, website: e.target.value }))
+                      }
                       className="w-full rounded-xl border border-[var(--line)] bg-[var(--bg)] px-4 py-3.5 text-[14px] transition-all focus:outline-none focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                     />
                   </div>
@@ -370,14 +430,18 @@ function AnalystOnboardingForm() {
                   </label>
                   <select
                     value={registerData.registrationType}
-                    onChange={(e) => setRegisterData(prev => ({ ...prev, registrationType: e.target.value }))}
+                    onChange={(e) =>
+                      setRegisterData((prev) => ({ ...prev, registrationType: e.target.value }))
+                    }
                     className={`w-full rounded-xl border px-4 py-3.5 text-[14px] transition-all focus:outline-none appearance-none bg-[var(--bg)] ${
-                      fieldErrors.registrationType 
-                        ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                        : 'border-[var(--line)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                      fieldErrors.registrationType
+                        ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                        : "border-[var(--line)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                     }`}
                   >
-                    <option value="" disabled>Select registration type</option>
+                    <option value="" disabled>
+                      Select registration type
+                    </option>
                     <option value="Research Analyst">Research Analyst</option>
                     <option value="Investment Advisor">Investment Advisor</option>
                   </select>
@@ -400,11 +464,16 @@ function AnalystOnboardingForm() {
                       step="0.1"
                       placeholder="e.g. 50"
                       value={registerData.assetUnderResearchCr}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, assetUnderResearchCr: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({
+                          ...prev,
+                          assetUnderResearchCr: e.target.value,
+                        }))
+                      }
                       className={`w-full rounded-xl border px-4 py-3.5 text-[14px] transition-all focus:outline-none ${
-                        fieldErrors.assetUnderResearchCr 
-                          ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                          : 'border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                        fieldErrors.assetUnderResearchCr
+                          ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                          : "border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                       }`}
                     />
                     {fieldErrors.assetUnderResearchCr && (
@@ -423,11 +492,13 @@ function AnalystOnboardingForm() {
                       min="0"
                       placeholder="e.g. 1500"
                       value={registerData.numberOfClients}
-                      onChange={(e) => setRegisterData(prev => ({ ...prev, numberOfClients: e.target.value }))}
+                      onChange={(e) =>
+                        setRegisterData((prev) => ({ ...prev, numberOfClients: e.target.value }))
+                      }
                       className={`w-full rounded-xl border px-4 py-3.5 text-[14px] transition-all focus:outline-none ${
-                        fieldErrors.numberOfClients 
-                          ? 'border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500' 
-                          : 'border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]'
+                        fieldErrors.numberOfClients
+                          ? "border-red-300 bg-red-50/30 focus:border-red-500 focus:ring-1 focus:ring-red-500"
+                          : "border-[var(--line)] bg-[var(--bg)] focus:border-[var(--brand)] focus:ring-1 focus:ring-[var(--brand)] hover:border-[var(--muted-2)]"
                       }`}
                     />
                     {fieldErrors.numberOfClients && (
@@ -455,7 +526,7 @@ function AnalystOnboardingForm() {
                 >
                   {/* Subtle shine effect on hover */}
                   <div className="absolute inset-0 -translate-x-full bg-white/20 group-hover:animate-[shimmer_1.5s_infinite] skew-x-12" />
-                  
+
                   {isSubmitting ? (
                     <>
                       <Icon name="timer" className="w-5 h-5 animate-spin" />
@@ -464,13 +535,22 @@ function AnalystOnboardingForm() {
                   ) : (
                     <>
                       Complete Registration
-                      <Icon name="arrowRight" className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                      <Icon
+                        name="arrowRight"
+                        className="w-5 h-5 transition-transform group-hover:translate-x-1"
+                      />
                     </>
                   )}
                 </button>
-                
+
                 <div className="mt-6 text-center text-[13px] text-[var(--muted)] font-medium">
-                  By registering, you agree to the <a href="#" className="text-[var(--brand)] hover:underline font-bold transition-colors">Analyst Terms of Service</a>
+                  By registering, you agree to the{" "}
+                  <a
+                    href="#"
+                    className="text-[var(--brand)] hover:underline font-bold transition-colors"
+                  >
+                    Analyst Terms of Service
+                  </a>
                 </div>
               </div>
             </form>
@@ -483,11 +563,13 @@ function AnalystOnboardingForm() {
 
 export default function AnalystOnboardingPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
-        <Icon name="timer" className="w-8 h-8 animate-spin text-[var(--brand)]" />
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center">
+          <Icon name="timer" className="w-8 h-8 animate-spin text-[var(--brand)]" />
+        </div>
+      }
+    >
       <AnalystOnboardingForm />
     </Suspense>
   );

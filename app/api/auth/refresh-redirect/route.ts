@@ -14,7 +14,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const searchParams = request.nextUrl.searchParams;
   const next = searchParams.get("next") || "/dashboard";
-  const loginUrl = new URL(`/login?next=${encodeURIComponent(next)}`, request.nextUrl.origin);
+  const loginUrl = new URL(`/?next=${encodeURIComponent(next)}`, request.nextUrl.origin);
   const targetUrl = new URL(next, request.nextUrl.origin);
 
   if (!refreshToken || !deviceId) {

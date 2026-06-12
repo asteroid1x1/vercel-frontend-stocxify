@@ -13,7 +13,7 @@ export default async function TraderLayout({ children }: { children: React.React
   const session = await readUserSessionFromCookies();
 
   if (!session.authenticated) {
-    redirect("/login?next=/trader/dashboard");
+    redirect("/");
   }
 
   if (session.user.user_type === "ANALYST") {

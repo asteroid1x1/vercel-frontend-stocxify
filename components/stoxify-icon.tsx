@@ -9,6 +9,7 @@ export type IconName =
   | "banknote"
   | "check"
   | "chevronRight"
+  | "chevronDown"
   | "creditCard"
   | "fileBadge"
   | "fileText"
@@ -40,6 +41,8 @@ export type IconName =
   | "eyeOff"
   | "google"
   | "apple"
+  | "helpCircle"
+  | "headset"
   | "layoutDashboard"
   | "activity"
   | "gear"
@@ -109,6 +112,8 @@ const icons: Record<IconName, string> = {
   wallet: "fa-solid fa-wallet",
   x: "fa-solid fa-xmark",
   zap: "fa-solid fa-bolt",
+  helpCircle: "fa-solid fa-circle-question",
+  headset: "fa-solid fa-headset",
 };
 
 function getFontSize(className?: string): CSSProperties["fontSize"] {

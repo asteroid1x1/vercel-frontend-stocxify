@@ -37,7 +37,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   if (!body.identifier) {
     return NextResponse.json(
-      { error: "Phone or email is required", code: "BAD_REQUEST" },
+      { error: "Phone number is required", code: "BAD_REQUEST" },
+      { status: 400 }
+    );
+  }
+
+  const identifier = body.identifier.trim();
+  if (identifier.includes("@") || /[a-zA-Z]/.test(identifier)) {
+    return NextResponse.json(
+      { error: "Email login is not supported", code: "BAD_REQUEST" },
       { status: 400 }
     );
   }
@@ -55,7 +63,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       path: body.intent === "ANALYST" ? "/auth/analyst/request-otp" : "/auth/login/request-otp",
       method: "POST",
       deviceId,
-      body: { identifier: body.identifier.trim() },
+      body: { identifier },
       extraHeaders: forwardedIpHeaders(request),
     });
   } catch (error) {

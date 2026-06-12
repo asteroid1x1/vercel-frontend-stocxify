@@ -11,7 +11,7 @@ export default async function ProfilePage() {
   const session = await readUserSessionFromCookies();
 
   if (!session.authenticated) {
-    redirect("/login?next=/trader/profile");
+    redirect("/");
   }
 
   return <TraderProfile user={session.user} />;

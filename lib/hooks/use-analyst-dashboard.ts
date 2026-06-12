@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { DashboardMetrics, Trade, Subscriber, AnalystProfile, SubscriptionPlan } from "@/lib/types/analyst";
+import type {
+  DashboardMetrics,
+  Trade,
+  Subscriber,
+  AnalystProfile,
+  SubscriptionPlan,
+} from "@/lib/types/analyst";
 
 // ─── Mock Data ──────────────────────────────────────────────────────────────
 
@@ -86,7 +92,7 @@ let MOCK_PLANS: SubscriptionPlan[] = [
 export function useDashboardMetrics() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [isError] = useState(false);
 
   useEffect(() => {
     // Simulate API fetch
@@ -103,7 +109,7 @@ export function useDashboardMetrics() {
 export function useActiveTrades(limit: number = 5) {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [isError] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -147,7 +153,7 @@ export function useClosedTrades() {
 }
 
 export function useLiveTradesStats() {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<Record<string, number> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -170,7 +176,7 @@ export function useLiveTradesStats() {
 export function useRecentSubscribers(limit: number = 5) {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isError, setIsError] = useState(false);
+  const [isError] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -218,7 +224,7 @@ export function useSubscriptionPlans() {
 }
 
 export function useSubscriptionPlansStats() {
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<Record<string, number> | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {

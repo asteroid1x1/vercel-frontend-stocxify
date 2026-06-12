@@ -26,6 +26,7 @@ const navItems: Array<{
   { href: "/trader/profile?tab=subscriptions", label: "Subscriptions", icon: "listChecks" },
   { href: "/trader/notifications", label: "Notifications", icon: "bell" },
   { href: "/trader/profile", label: "Profile", icon: "users" },
+  { href: "/trader/support", label: "Help & Support", icon: "helpCircle" },
 ];
 
 function getInitials(name: string): string {

@@ -53,6 +53,7 @@ export function PlanModal({ plan, onClose, onSave }: PlanModalProps) {
 
     // Simulate small latency for premium feel
     setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const planData = {
         name: name.trim(),
         price: parseFloat(price),

@@ -31,7 +31,7 @@ export function proxy(request: NextRequest) {
 
     if (!hasSession) {
       const next = encodeURIComponent(pathname + request.nextUrl.search);
-      return NextResponse.redirect(new URL(`/login?next=${next}`, request.url));
+      return NextResponse.redirect(new URL(`/?next=${next}`, request.url));
     }
   }
 

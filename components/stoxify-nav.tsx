@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import { userCookieNames } from "@/lib/auth/cookies";
 
 import { Icon } from "./stoxify-icon";
-import { AnalystLoginModal } from "./analyst-login-modal";
 
 type NavUser = {
   user_id?: string;
@@ -124,7 +123,6 @@ export function StoxifyNav({
   ctaVariant?: "primary" | "orange";
 }) {
   const [open, setOpen] = useState(false);
-  const [isAnalystModalOpen, setIsAnalystModalOpen] = useState(false);
   const navUser = useNavUser();
   const navUserLabel = navUser ? getUserLabel(navUser) : "";
 
@@ -215,32 +213,16 @@ export function StoxifyNav({
             <Link
               className="inline-flex items-center justify-center gap-2 rounded border border-[var(--line)] bg-transparent px-5 py-[9px] text-[13px] font-medium text-[var(--muted)] transition-colors hover:border-[var(--muted-2)] hover:bg-[var(--line-2)] hover:text-[var(--ink)] max-[860px]:hidden"
               href="/login"
-              onClick={(e) => {
-                if (active === "analysts") {
-                  e.preventDefault();
-                  setIsAnalystModalOpen(true);
-                }
-              }}
             >
               Log In
             </Link>
           )}
-          <Link
-            className={ctaClass}
-            href={
-              navUser
-                ? navUser.user_type === "ANALYST"
-                  ? "/dashboard"
-                  : "/trader/dashboard"
-                : ctaHref
-            }
-          >
-            {navUser ? (navUser.user_type === "ANALYST" ? "RA Home" : "Dashboard") : ctaLabel}
+          <Link className={ctaClass} href={navUser ? "/trader/dashboard" : ctaHref}>
+            {navUser ? "Dashboard" : ctaLabel}
             <Icon className="h-3.5 w-3.5" name="arrowRight" />
           </Link>
         </div>
       </div>
-      <AnalystLoginModal isOpen={isAnalystModalOpen} onClose={() => setIsAnalystModalOpen(false)} />
     </nav>
   );
 }
