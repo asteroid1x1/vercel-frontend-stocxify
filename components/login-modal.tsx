@@ -203,7 +203,10 @@ export function LoginModal({
       // Success – close modal and redirect
       console.log("[LoginModal] verify response", { intent, redirectTo: data.redirectTo, data });
       onClose();
-      const destination = data.redirectTo ?? "/trader/dashboard";
+      // Check for ?next= param from auth redirect, fall back to server-provided redirect or default
+      const params = new URLSearchParams(window.location.search);
+      const nextParam = params.get("next");
+      const destination = nextParam || data.redirectTo || "/trader/dashboard";
       console.log("[LoginModal] redirecting to", destination);
       router.push(destination);
       router.refresh();

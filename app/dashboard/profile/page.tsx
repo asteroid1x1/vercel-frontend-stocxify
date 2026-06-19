@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { Topbar } from "@/components/dashboard/topbar";
 import { useAnalystProfile } from "@/lib/hooks/use-analyst-dashboard";
-import { updateMockProfile } from "@/lib/hooks/use-analyst-dashboard";
 import { useDashboard } from "@/components/dashboard/dashboard-context";
 import { Icon } from "@/components/stoxify-icon";
 
@@ -27,6 +26,20 @@ const AVATAR_POOL = [
 export default function ProfilePage() {
   const { profile, mutate } = useAnalystProfile();
   const { showSuccessToast } = useDashboard();
+
+  // Derive SEBI verification status from the analyst's state
+  const isSebiVerified = profile?.state
+    ? /^ACTIVE$/i.test(profile.state)
+    : false;
+
+  // Human-readable registration type
+  const entityTypeLabel = profile?.registration_type
+    ? profile.registration_type === "research_analyst"
+      ? "Research Analyst"
+      : profile.registration_type === "investment_advisors"
+        ? "Investment Advisor"
+        : profile.registration_type
+    : "Individual";
 
   // Tab State
   const [activeTab, setActiveTab] = useState("Profile Information");
@@ -67,8 +80,8 @@ export default function ProfilePage() {
     }
   };
 
-  // Save changes to mock profile state and trigger refresh
-  const handleSave = (e: React.FormEvent) => {
+  // Save changes via real API and trigger refresh
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!firstName.trim()) {
@@ -78,21 +91,36 @@ export default function ProfilePage() {
 
     const updatedName = `${firstName.trim()} ${lastName.trim()}`.trim();
 
-    updateMockProfile({
-      name: updatedName,
-      bio: bio.trim(),
-      twitter_url: twitterUrl.trim(),
-      linkedin_url: linkedinUrl.trim(),
-      avatar_url: avatarUrl,
-    });
+    try {
+      const res = await fetch("/api/analyst/profile", {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: updatedName,
+          bio: bio.trim(),
+          twitter_url: twitterUrl.trim(),
+          linkedin_url: linkedinUrl.trim(),
+          avatar_url: avatarUrl,
+        }),
+      });
 
-    // Notify SWR to refresh /users/me so sidebar and topbar update instantly
-    mutate();
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showSuccessToast("Save Failed", err.error ?? "Unable to save profile changes.");
+        return;
+      }
 
-    showSuccessToast(
-      "Profile Updated",
-      "Your professional profile details have been saved successfully."
-    );
+      // Refresh cached profile so sidebar/topbar update instantly
+      await mutate();
+
+      showSuccessToast(
+        "Profile Updated",
+        "Your professional profile details have been saved successfully."
+      );
+    } catch {
+      showSuccessToast("Network Error", "Unable to reach the server. Please try again.");
+    }
   };
 
   // Cycle avatar selection
@@ -359,10 +387,17 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between">
                   <h2 className="text-[17px] font-bold text-slate-800 leading-tight flex items-center gap-2">
                     SEBI Verification
-                    <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-[10.5px] font-bold text-green-600">
-                      <Icon className="h-3 w-3" name="circleCheck" />
-                      Verified
-                    </span>
+                    {isSebiVerified ? (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-[10.5px] font-bold text-green-600">
+                        <Icon className="h-3 w-3" name="circleCheck" />
+                        Verified
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2.5 py-0.5 text-[10.5px] font-bold text-amber-600">
+                        <Icon className="h-3 w-3" name="clock" />
+                        {profile?.state ? profile.state.replace(/_/g, " ") : "Pending"}
+                      </span>
+                    )}
                   </h2>
                 </div>
                 <p className="text-[13px] text-slate-400 mt-1">
@@ -381,7 +416,7 @@ export default function ProfilePage() {
                   </label>
                   <input
                     type="text"
-                    value={profile?.sebi_registration_number || "INH000008123"}
+                    value={profile?.sebi_license_number || profile?.sebi_registration_number || "—"}
                     disabled
                     className="w-full px-3 py-2 border border-slate-100 bg-[#f8fafc] rounded-lg text-[13.5px] text-slate-500 cursor-not-allowed focus:outline-none"
                   />
@@ -395,7 +430,15 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value="15 May 2018"
+                      value={
+                        profile?.verification?.submitted_at
+                          ? new Date(profile.verification.submitted_at).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : "—"
+                      }
                       disabled
                       className="w-full px-3 py-2 border border-slate-100 bg-[#f8fafc] rounded-lg text-[13.5px] text-slate-500 cursor-not-allowed focus:outline-none"
                     />
@@ -406,7 +449,7 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value="14 May 2028"
+                      value="—"
                       disabled
                       className="w-full px-3 py-2 border border-slate-100 bg-[#f8fafc] rounded-lg text-[13.5px] text-slate-500 cursor-not-allowed focus:outline-none"
                     />
@@ -432,7 +475,7 @@ export default function ProfilePage() {
                     </label>
                     <input
                       type="text"
-                      value="Individual"
+                      value={entityTypeLabel}
                       disabled
                       className="w-full px-3 py-2 border border-slate-100 bg-[#f8fafc] rounded-lg text-[13.5px] text-slate-500 cursor-not-allowed focus:outline-none"
                     />
@@ -449,35 +492,40 @@ export default function ProfilePage() {
                   Copies of your official registration certificates on file.
                 </p>
 
-                <div className="border border-slate-100 rounded-lg p-4 bg-[#f8fafc] flex items-center justify-between mt-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
-                      <Icon className="h-5 w-5" name="fileText" />
-                    </div>
-                    <div>
-                      <div className="text-[13.5px] font-bold text-slate-800 leading-tight">
-                        SEBI_Registration_Certificate.pdf
+{profile?.sebi_license_doc_url ? (
+                  <div className="border border-slate-100 rounded-lg p-4 bg-[#f8fafc] flex items-center justify-between mt-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center text-blue-500 shrink-0">
+                        <Icon className="h-5 w-5" name="fileText" />
                       </div>
-                      <div className="text-[11.5px] text-slate-400 mt-0.5">
-                        1.2 MB • Uploaded on 12 May 2023
+                      <div>
+                        <div className="text-[13.5px] font-bold text-slate-800 leading-tight">
+                          SEBI Registration Document
+                        </div>
+                        <div className="text-[11.5px] text-slate-400 mt-0.5">
+                          {profile.verification?.submitted_at
+                            ? `Uploaded on ${new Date(profile.verification.submitted_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}`
+                            : "Uploaded"}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <button
-                    onClick={() =>
-                      showSuccessToast(
-                        "Downloading File",
-                        "Starting download for SEBI_Registration_Certificate.pdf..."
-                      )
-                    }
-                    className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 rounded-lg text-[12.5px] font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
-                    type="button"
-                  >
-                    <Icon className="h-3.5 w-3.5" name="download" />
-                    Download
-                  </button>
-                </div>
+                    <a
+                      href={profile.sebi_license_doc_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 rounded-lg text-[12.5px] font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm cursor-pointer"
+                    >
+                      <Icon className="h-3.5 w-3.5" name="download" />
+                      View / Download
+                    </a>
+                  </div>
+                ) : (
+                  <div className="border border-slate-100 rounded-lg p-4 bg-[#f8fafc] flex items-center gap-3 mt-3 text-[13px] text-slate-400">
+                    <Icon className="h-4 w-4 shrink-0" name="fileText" />
+                    No document uploaded yet.
+                  </div>
+                )}
               </div>
 
               {/* Bottom Actions */}

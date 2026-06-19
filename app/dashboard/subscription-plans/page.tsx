@@ -7,7 +7,6 @@ import { MetricCard } from "@/components/dashboard/metric-card";
 import { Icon } from "@/components/stoxify-icon";
 import { useDashboard } from "@/components/dashboard/dashboard-context";
 import { useSubscriptionPlans, useSubscriptionPlansStats } from "@/lib/hooks/use-analyst-dashboard";
-import { updateMockPlanStatus } from "@/lib/hooks/use-analyst-dashboard";
 import { PlanModal } from "@/components/dashboard/plan-modal";
 import type { SubscriptionPlan } from "@/lib/types/analyst";
 
@@ -78,23 +77,43 @@ export default function SubscriptionPlansPage() {
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | undefined>(undefined);
 
   // Toggle Plan status (Activate/Deactivate)
-  const handleToggleStatus = (planId: string, currentStatus: string, name: string) => {
-    const newStatus = currentStatus === "ACTIVE" ? "INACTIVE" : "ACTIVE";
-    updateMockPlanStatus(planId, newStatus);
+  const handleToggleStatus = async (planId: string, currentStatus: string, name: string) => {
+    const isActive = currentStatus === "ACTIVE";
+    const newIsActive = !isActive;
 
-    if (newStatus === "ACTIVE") {
-      showSuccessToast(
-        "Plan Activated",
-        `"${name}" plan is now active and new subscribers can subscribe.`
-      );
-    } else {
-      showSuccessToast(
-        "Plan Deactivated",
-        `"${name}" plan has been deactivated. Current subscribers remain active.`
-      );
+    try {
+      const res = await fetch(`/api/analyst/plans/${planId}/status`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: newIsActive }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        showSuccessToast(
+          "Toggle Failed",
+          err.error ?? `Could not ${newIsActive ? "activate" : "deactivate"} "${name}".`
+        );
+        return;
+      }
+
+      if (newIsActive) {
+        showSuccessToast(
+          "Plan Activated",
+          `"${name}" plan is now active and new subscribers can subscribe.`
+        );
+      } else {
+        showSuccessToast(
+          "Plan Deactivated",
+          `"${name}" plan has been deactivated. Current subscribers remain active.`
+        );
+      }
+    } catch {
+      showSuccessToast("Network Error", `Unable to update "${name}" plan status.`);
     }
 
-    // Mutate SWR keys to re-fetch and update UI components
+    // Re-fetch plans and stats
     mutate("/subscriptions/analyst/plans");
     mutate("/subscriptions/analyst/plans/stats");
   };

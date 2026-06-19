@@ -67,10 +67,20 @@ export interface DashboardMetrics {
 export interface AnalystProfile {
   name: string;
   avatar_url?: string;
-  sebi_reg_no?: string;
   bio?: string;
   twitter_url?: string;
   linkedin_url?: string;
   email?: string;
-  sebi_registration_number?: string;
+  // SEBI / analyst-specific fields returned by the user-service
+  state?: string;
+  sebi_registration_number?: string; // legacy field name (kept for compat)
+  sebi_license_number?: string;      // canonical field from the DB
+  sebi_license_doc_url?: string;
+  registration_type?: "research_analyst" | "investment_advisors" | string;
+  verification?: {
+    submitted_at?: string;
+    reviewed_at?: string;
+    rejection_reason?: string;
+    documents?: Array<{ type?: string; url?: string; uploaded_at?: string }>;
+  };
 }

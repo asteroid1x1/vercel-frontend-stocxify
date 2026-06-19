@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useSWRConfig } from "swr";
 import { Icon } from "@/components/stoxify-icon";
 import type { TradeDirection } from "@/lib/types/analyst";
@@ -10,20 +10,38 @@ interface CreateTradeModalProps {
   onSuccess: (title: string, message: string) => void;
 }
 
-// Typical Indian market symbols for autocomplete search
+// Fallback popular symbols shown when the search input is empty
 const POPULAR_SYMBOLS = [
-  { symbol: "RELIANCE-EQ", segment: "EQUITY" },
-  { symbol: "HDFCBANK-EQ", segment: "EQUITY" },
-  { symbol: "TCS-EQ", segment: "EQUITY" },
-  { symbol: "INFY-EQ", segment: "EQUITY" },
-  { symbol: "ICICIBANK-EQ", segment: "EQUITY" },
-  { symbol: "SBIN-EQ", segment: "EQUITY" },
-  { symbol: "BHARTIARTL-EQ", segment: "EQUITY" },
-  { symbol: "LTIM-EQ", segment: "EQUITY" },
-  { symbol: "NIFTY29DEC2630000PE", segment: "FNO" },
-  { symbol: "BANKNIFTY29SEP2648000CE", segment: "FNO" },
-  { symbol: "FINNIFTY30JUN2622450CE", segment: "FNO" },
+  { symbol: "RELIANCE-EQ", exchange: "NSE" },
+  { symbol: "HDFCBANK-EQ", exchange: "NSE" },
+  { symbol: "TCS-EQ", exchange: "NSE" },
+  { symbol: "INFY-EQ", exchange: "NSE" },
+  { symbol: "ICICIBANK-EQ", exchange: "NSE" },
+  { symbol: "SBIN-EQ", exchange: "NSE" },
+  { symbol: "BHARTIARTL-EQ", exchange: "NSE" },
+  { symbol: "LTIM-EQ", exchange: "NSE" },
 ];
+
+/** Map exchange segment to a user-facing badge label */
+function exchangeToSegment(exchange: string): string {
+  switch (exchange) {
+    case "NFO":
+    case "MCX":
+    case "CDS":
+    case "NCDEX":
+      return "FNO";
+    case "NSE":
+    case "BSE":
+    default:
+      return "EQUITY";
+  }
+}
+
+interface SearchResult {
+  symbol: string;
+  token: string;
+  exchange: string;
+}
 
 export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) {
   const { mutate } = useSWRConfig();
@@ -40,6 +58,27 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
   const [stopLoss, setStopLoss] = useState("");
   const [notes, setNotes] = useState("");
   const [batch, setBatch] = useState("");
+
+  // Search states
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [recentSearches, setRecentSearches] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const searchAbortRef = useRef<AbortController | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load recent searches from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("stoxify_recent_searches");
+        if (stored) {
+          setRecentSearches(JSON.parse(stored));
+        }
+      } catch (e) {
+        console.error("Failed to load recent searches", e);
+      }
+    }
+  }, []);
 
   // Validation / Loading states
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -59,19 +98,91 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Filter symbols for search query
-  const filteredSymbols = POPULAR_SYMBOLS.filter((s) =>
-    s.symbol.toLowerCase().includes(symbolQuery.toLowerCase())
-  );
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      if (searchAbortRef.current) searchAbortRef.current.abort();
+    };
+  }, []);
 
-  const handleSelectSymbol = async (item: (typeof POPULAR_SYMBOLS)[0]) => {
+  const handleClearRecentSearches = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setRecentSearches([]);
+    try {
+      localStorage.removeItem("stoxify_recent_searches");
+    } catch (err) {
+      console.error("Failed to clear recent searches", err);
+    }
+  };
+
+  // Debounced search function
+  const performSearch = useCallback((query: string) => {
+    // Cancel any in-flight request
+    if (searchAbortRef.current) searchAbortRef.current.abort();
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+
+    if (!query.trim()) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+
+    debounceTimerRef.current = setTimeout(async () => {
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
+
+      try {
+        const res = await fetch(
+          `/api/market-data/search?q=${encodeURIComponent(query.trim())}&limit=20`,
+          {
+            credentials: "same-origin",
+            signal: controller.signal,
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (!controller.signal.aborted) {
+            setSearchResults(data.results ?? []);
+          }
+        }
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") return;
+        // Non-critical: fall back to no results
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsSearching(false);
+        }
+      }
+    }, 300);
+  }, []);
+
+  const handleSelectSymbol = async (item: SearchResult) => {
     setSymbolQuery(item.symbol);
-    setSegment(item.segment as "EQUITY" | "FNO");
+    const derivedSegment = exchangeToSegment(item.exchange) as "EQUITY" | "FNO";
+    setSegment(derivedSegment);
     setShowAutocomplete(false);
     // Clear symbol error if it was set
     if (errors.symbol) {
       setErrors((prev) => ({ ...prev, symbol: "" }));
     }
+
+    // Prepend to recent searches, capping at 5
+    setRecentSearches((prev) => {
+      const filtered = prev.filter((r) => r.symbol !== item.symbol || r.exchange !== item.exchange);
+      const updated = [
+        { symbol: item.symbol, token: item.token || "", exchange: item.exchange },
+        ...filtered,
+      ].slice(0, 5);
+      try {
+        localStorage.setItem("stoxify_recent_searches", JSON.stringify(updated));
+      } catch (e) {
+        console.error("Failed to save recent searches", e);
+      }
+      return updated;
+    });
 
     // Auto-fetch the latest price for this symbol
     setIsFetchingPrice(true);
@@ -87,7 +198,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
           setEntryPrice(String(price));
         }
       }
-    } catch {
+    } catch (err) {
       // Non-critical — analyst can still type manually
     } finally {
       setIsFetchingPrice(false);
@@ -250,11 +361,18 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                   onChange={(e) => {
                     setSymbolQuery(e.target.value);
                     setShowAutocomplete(true);
+                    performSearch(e.target.value);
                   }}
                   placeholder="Search stocks, futures, options..."
                   type="text"
                   value={symbolQuery}
                 />
+                {isSearching && (
+                  <Icon
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin h-3.5 w-3.5 text-[var(--brand)]"
+                    name="timer"
+                  />
+                )}
               </div>
               {errors.symbol && (
                 <div className="text-[11px] text-[var(--red)] font-semibold mt-1 flex items-center gap-1">
@@ -264,21 +382,98 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
               )}
 
               {/* Autocomplete Dropdown */}
-              {showAutocomplete && filteredSymbols.length > 0 && (
-                <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-[100] max-h-48 overflow-y-auto rounded-lg border border-[var(--line)] bg-white py-1 shadow-lg">
-                  {filteredSymbols.map((item) => (
-                    <button
-                      className="w-full px-4 py-2 text-left text-[12.5px] text-[var(--ink)] hover:bg-[var(--surface)] transition-colors flex items-center justify-between"
-                      key={item.symbol}
-                      onClick={() => handleSelectSymbol(item)}
-                      type="button"
-                    >
-                      <span className="font-bold">{item.symbol}</span>
-                      <span className="text-[10px] font-bold bg-[var(--line)] px-1.5 py-0.5 rounded text-[var(--muted)] uppercase">
-                        {item.segment}
-                      </span>
-                    </button>
-                  ))}
+              {showAutocomplete && (
+                <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-[100] max-h-60 overflow-y-auto rounded-lg border border-[var(--line)] bg-white py-1 shadow-lg">
+                  {isSearching && symbolQuery.trim().length > 0 && (
+                    <div className="px-4 py-3 text-center text-[12px] text-[var(--muted-2)] flex items-center justify-center gap-2">
+                      <Icon className="animate-spin h-3.5 w-3.5" name="timer" />
+                      Searching instruments...
+                    </div>
+                  )}
+                  {!isSearching && symbolQuery.trim().length > 0 && searchResults.length === 0 && (
+                    <div className="px-4 py-3 text-center text-[12px] text-[var(--muted-2)]">
+                      No instruments found for &ldquo;{symbolQuery}&rdquo;
+                    </div>
+                  )}
+                  {symbolQuery.trim().length > 0 ? (
+                    searchResults.map((item) => (
+                      <button
+                        className="w-full px-4 py-2 text-left text-[12.5px] text-[var(--ink)] hover:bg-[var(--surface)] transition-colors flex items-center justify-between"
+                        key={`search-${item.exchange}-${item.symbol}`}
+                        onClick={() => handleSelectSymbol(item)}
+                        type="button"
+                      >
+                        <span className="font-bold">{item.symbol}</span>
+                        <span className="text-[10px] font-bold bg-[var(--line)] px-1.5 py-0.5 rounded text-[var(--muted)] uppercase">
+                          {exchangeToSegment(item.exchange)}
+                        </span>
+                      </button>
+                    ))
+                  ) : (
+                    <>
+                      {/* Recent Searches Section */}
+                      {recentSearches.length > 0 && (
+                        <div className="mb-2">
+                          <div className="px-4 py-1.5 text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider flex items-center justify-between">
+                            <span className="flex items-center gap-1.5">
+                              <Icon className="h-3 w-3 text-[var(--muted-2)]" name="timer" />
+                              Recent Searches
+                            </span>
+                            <button
+                              onClick={handleClearRecentSearches}
+                              className="text-[9px] font-semibold text-[var(--muted-2)] hover:text-[var(--brand)] transition-colors lowercase"
+                              type="button"
+                            >
+                              Clear All
+                            </button>
+                          </div>
+                          {recentSearches.map((item) => (
+                            <button
+                              className="w-full px-4 py-2 text-left text-[12.5px] text-[var(--ink)] hover:bg-[var(--surface)] transition-colors flex items-center justify-between"
+                              key={`recent-${item.exchange}-${item.symbol}`}
+                              onClick={() => handleSelectSymbol(item)}
+                              type="button"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Icon className="h-3.5 w-3.5 text-[var(--muted-2)]" name="timer" />
+                                <span className="font-semibold">{item.symbol}</span>
+                              </span>
+                              <span className="text-[10px] font-bold bg-[var(--line)] px-1.5 py-0.5 rounded text-[var(--muted)] uppercase">
+                                {exchangeToSegment(item.exchange)}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Popular Stocks Section */}
+                      <div>
+                        <div className="px-4 py-1.5 text-[10px] font-bold text-[var(--muted)] uppercase tracking-wider flex items-center gap-1.5">
+                          <Icon className="h-3 w-3 text-[var(--muted-2)]" name="trendingUp" />
+                          Popular Stocks
+                        </div>
+                        {POPULAR_SYMBOLS.map((s) => {
+                          const item = { symbol: s.symbol, token: "", exchange: s.exchange };
+                          return (
+                            <button
+                              className="w-full px-4 py-2 text-left text-[12.5px] text-[var(--ink)] hover:bg-[var(--surface)] transition-colors flex items-center justify-between"
+                              key={`popular-${s.exchange}-${s.symbol}`}
+                              onClick={() => handleSelectSymbol(item)}
+                              type="button"
+                            >
+                              <span className="flex items-center gap-2">
+                                <Icon className="h-3.5 w-3.5 text-[var(--muted-2)]" name="trendingUp" />
+                                <span className="font-semibold">{s.symbol}</span>
+                              </span>
+                              <span className="text-[10px] font-bold bg-[var(--line)] px-1.5 py-0.5 rounded text-[var(--muted)] uppercase">
+                                {exchangeToSegment(s.exchange)}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>

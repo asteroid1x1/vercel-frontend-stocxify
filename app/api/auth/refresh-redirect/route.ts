@@ -18,7 +18,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const targetUrl = new URL(next, request.nextUrl.origin);
 
   if (!refreshToken || !deviceId) {
-    return NextResponse.redirect(loginUrl);
+    const res = NextResponse.redirect(loginUrl);
+    await clearUserCookies(res);
+    return res;
   }
 
   let resp: Response;

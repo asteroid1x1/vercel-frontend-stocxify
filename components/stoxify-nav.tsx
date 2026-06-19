@@ -72,18 +72,25 @@ function readCookieNavUser(): Exclude<NavUser, null> | null {
   }
 }
 
+function clearUserInfoCookie() {
+  if (typeof document !== "undefined") {
+    document.cookie = `${userCookieNames.userInfo}=; path=/; max-age=0`;
+  }
+}
+
 function useNavUser(): NavUser {
   const [user, setUser] = useState<NavUser>(null);
 
   useEffect(() => {
     const cookieUser = readCookieNavUser();
+
+    // Show cookie data immediately for fast UI
     if (cookieUser) {
-      Promise.resolve().then(() => {
-        setUser(cookieUser);
-      });
-      return;
+      setUser(cookieUser);
     }
 
+    // Always validate with the server — the access token may have expired
+    // even though the long-lived userInfo cookie persists.
     const controller = new AbortController();
 
     void fetch("/api/auth/me", {
@@ -92,15 +99,21 @@ function useNavUser(): NavUser {
       signal: controller.signal,
     })
       .then(async (response) => {
-        if (!response.ok) return null;
+        if (!response.ok) {
+          // Session is invalid — clear stale cookie and remove profile icon
+          clearUserInfoCookie();
+          setUser(null);
+          return null;
+        }
         return (await response.json().catch(() => null)) as { user?: unknown } | null;
       })
       .then((data) => {
-        const parsed = normalizeNavUser(data?.user);
+        if (!data) return;
+        const parsed = normalizeNavUser(data.user);
         if (parsed) setUser(parsed);
       })
       .catch(() => {
-        // ignore missing/expired sessions
+        // Network error — keep showing cookie data if available
       });
 
     return () => controller.abort();
@@ -129,6 +142,16 @@ export function StoxifyNav({
   const [isAnalystModalOpen, setIsAnalystModalOpen] = useState(false);
   const navUser = useNavUser();
   const navUserLabel = navUser ? getUserLabel(navUser) : "";
+
+  // Auto-open login modal when redirected with ?next= and user is not authenticated
+  useEffect(() => {
+    if (navUser) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("next")) {
+      setLoginOpen(true);
+    }
+  }, [navUser]);
 
   const closeMenu = () => setOpen(false);
   const activeLink =

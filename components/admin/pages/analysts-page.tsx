@@ -1,6 +1,6 @@
 "use client";
 
-import { PencilIcon, RefreshCwIcon, ShieldOffIcon } from "lucide-react";
+import { PencilIcon, RefreshCwIcon, ShieldOffIcon, SlidersHorizontalIcon } from "lucide-react";
 
 import {
   ApiAdminPage,
@@ -19,6 +19,7 @@ import type { AdminRow } from "@/components/admin/admin-page-layout";
 import { Button } from "@/components/ui/button";
 import { Gated } from "@/components/admin/admin-permissions-provider";
 import { BlockAnalystDialog } from "@/components/admin/dialogs/block-analyst-dialog";
+import { ChangeAnalystStateDialog } from "@/components/admin/dialogs/change-analyst-state-dialog";
 import { EditAnalystProfileDialog } from "@/components/admin/dialogs/edit-analyst-profile-dialog";
 
 const FILTERS: FilterDef[] = [
@@ -63,6 +64,18 @@ function AnalystRowActions({ item, refresh }: { item: ApiRecord; refresh: () => 
               aria-label={/BLOCKED/i.test(state) ? "Unblock" : "Block"}
             >
               <ShieldOffIcon />
+            </Button>
+          }
+        />
+      </Gated>
+      <Gated power="PWR_USER_STATE_CHANGE">
+        <ChangeAnalystStateDialog
+          analystId={analystId}
+          currentState={state}
+          refresh={refresh}
+          trigger={
+            <Button size="icon-sm" variant="ghost" aria-label="Change state">
+              <SlidersHorizontalIcon />
             </Button>
           }
         />

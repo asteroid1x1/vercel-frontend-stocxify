@@ -142,7 +142,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   // Write tokens and redirect to dashboard
-  const redirectTo = "/analyst-dashboard";
+  const redirectTo = "/dashboard";
   const nextResponse = NextResponse.json({ ok: true, redirectTo });
 
   if (data.access_token) {
