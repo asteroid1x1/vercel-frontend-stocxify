@@ -48,11 +48,16 @@ export interface Trade {
 
 export interface Subscriber {
   subscription_id: string;
+  user_id?: string;
   user_name: string;
   user_avatar?: string;
+  user_email?: string;
   plan_name: string;
   billing_cycle: "WEEK" | "MONTH" | "QUARTER" | "YEAR";
   subscribed_at: string;
+  end_date?: string;
+  status?: "ACTIVE" | "CANCELLED" | "EXPIRED" | string;
+  amount?: number;
 }
 
 export interface DashboardMetric {

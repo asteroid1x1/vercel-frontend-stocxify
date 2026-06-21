@@ -48,6 +48,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
 
   // Form states
   const [symbolQuery, setSymbolQuery] = useState("");
+  const [isSymbolSelected, setIsSymbolSelected] = useState(false);
   const [showAutocomplete, setShowAutocomplete] = useState(false);
   const [tradeStructure, setTradeStructure] = useState<"SIMPLE" | "PAIR">("SIMPLE");
   const [segment, setSegment] = useState<"EQUITY" | "FNO">("EQUITY");
@@ -164,6 +165,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
     setSymbolQuery(item.symbol);
     const derivedSegment = exchangeToSegment(item.exchange) as "EQUITY" | "FNO";
     setSegment(derivedSegment);
+    setIsSymbolSelected(true);
     setShowAutocomplete(false);
     // Clear symbol error if it was set
     if (errors.symbol) {
@@ -361,6 +363,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                   onFocus={() => setShowAutocomplete(true)}
                   onChange={(e) => {
                     setSymbolQuery(e.target.value);
+                    setIsSymbolSelected(false);
                     setShowAutocomplete(true);
                     performSearch(e.target.value);
                   }}
@@ -520,15 +523,22 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                 <label className="block text-[11.5px] font-bold text-[var(--muted)] uppercase tracking-[0.05em] mb-1.5">
                   Segment
                 </label>
-                <div className="flex bg-[var(--surface)] p-1 rounded-lg border border-[var(--line)]">
+                <div className={`flex bg-[var(--surface)] p-1 rounded-lg border border-[var(--line)] ${isSymbolSelected ? "opacity-75" : ""}`}>
                   <button
                     className={`flex-1 py-1.5 text-center text-[12px] font-bold rounded-md transition-all ${
                       segment === "EQUITY"
                         ? "bg-white text-[var(--ink)] shadow-sm border border-[var(--line)]/50"
-                        : "text-[var(--muted)] hover:text-[var(--ink)]"
+                        : "text-[var(--muted)]"
+                    } ${
+                      isSymbolSelected
+                        ? "cursor-not-allowed opacity-60"
+                        : segment !== "EQUITY"
+                          ? "hover:text-[var(--ink)]"
+                          : ""
                     }`}
                     onClick={() => setSegment("EQUITY")}
                     type="button"
+                    disabled={isSymbolSelected}
                   >
                     Equity
                   </button>
@@ -536,10 +546,17 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                     className={`flex-1 py-1.5 text-center text-[12px] font-bold rounded-md transition-all ${
                       segment === "FNO"
                         ? "bg-white text-[var(--ink)] shadow-sm border border-[var(--line)]/50"
-                        : "text-[var(--muted)] hover:text-[var(--ink)]"
+                        : "text-[var(--muted)]"
+                    } ${
+                      isSymbolSelected
+                        ? "cursor-not-allowed opacity-60"
+                        : segment !== "FNO"
+                          ? "hover:text-[var(--ink)]"
+                          : ""
                     }`}
                     onClick={() => setSegment("FNO")}
                     type="button"
+                    disabled={isSymbolSelected}
                   >
                     FnO
                   </button>
