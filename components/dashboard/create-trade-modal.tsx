@@ -61,7 +61,37 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
   const [notes, setNotes] = useState("");
   const [batch, setBatch] = useState("");
   const [selectedPlanId, setSelectedPlanId] = useState("");
+  const [expiry, setExpiry] = useState("");
+  const [strikePrice, setStrikePrice] = useState("");
+  const [optionType, setOptionType] = useState<"CE" | "PE" | "">("");
   const { plans } = useSubscriptionPlans();
+
+  // Auto-detect FNO details from symbol string
+  useEffect(() => {
+    const query = symbolQuery.toUpperCase().replace(/\s+/g, "");
+    if (!query) return;
+
+    // Regex for Options (e.g. BANKNIFTY24MAY48000CE, NIFTYMAY22000PE)
+    // Group 1: Base Symbol, Group 2: Expiry, Group 3: Strike, Group 4: CE/PE
+    const optionMatch = query.match(/^([A-Z]+?)([\d]*[A-Z]{3}\d{0,2})(\d+)(CE|PE)$/);
+    if (optionMatch) {
+      setSegment("FNO");
+      setExpiry(optionMatch[2]);
+      setStrikePrice(optionMatch[3]);
+      setOptionType(optionMatch[4] as "CE" | "PE");
+      return;
+    }
+
+    // Regex for Futures (e.g. ICICIBANK26JUNFUT, RELIANCEMAYFUT)
+    const futMatch = query.match(/^([A-Z]+?)([\d]*[A-Z]{3}\d{0,2})FUT$/);
+    if (futMatch) {
+      setSegment("FNO");
+      setExpiry(futMatch[2]);
+      setStrikePrice("");
+      setOptionType("");
+      return;
+    }
+  }, [symbolQuery]);
 
   // Search states
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
@@ -289,6 +319,9 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
       target_note: notes.trim() || undefined,
       batch: batch || undefined,
       plan_id: selectedPlanId || undefined,
+      expiry: expiry || undefined,
+      strike_price: strikePrice ? parseFloat(strikePrice) : undefined,
+      option_type: optionType || undefined,
     };
 
     try {
@@ -527,22 +560,15 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                 <label className="block text-[11.5px] font-bold text-[var(--muted)] uppercase tracking-[0.05em] mb-1.5">
                   Segment
                 </label>
-                <div className={`flex bg-[var(--surface)] p-1 rounded-lg border border-[var(--line)] ${isSymbolSelected ? "opacity-75" : ""}`}>
+                <div className="flex bg-[var(--surface)] p-1 rounded-lg border border-[var(--line)]">
                   <button
                     className={`flex-1 py-1.5 text-center text-[12px] font-bold rounded-md transition-all ${
                       segment === "EQUITY"
                         ? "bg-white text-[var(--ink)] shadow-sm border border-[var(--line)]/50"
-                        : "text-[var(--muted)]"
-                    } ${
-                      isSymbolSelected
-                        ? "cursor-not-allowed opacity-60"
-                        : segment !== "EQUITY"
-                          ? "hover:text-[var(--ink)]"
-                          : ""
+                        : "text-[var(--muted)] hover:text-[var(--ink)]"
                     }`}
                     onClick={() => setSegment("EQUITY")}
                     type="button"
-                    disabled={isSymbolSelected}
                   >
                     Equity
                   </button>
@@ -550,23 +576,88 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                     className={`flex-1 py-1.5 text-center text-[12px] font-bold rounded-md transition-all ${
                       segment === "FNO"
                         ? "bg-white text-[var(--ink)] shadow-sm border border-[var(--line)]/50"
-                        : "text-[var(--muted)]"
-                    } ${
-                      isSymbolSelected
-                        ? "cursor-not-allowed opacity-60"
-                        : segment !== "FNO"
-                          ? "hover:text-[var(--ink)]"
-                          : ""
+                        : "text-[var(--muted)] hover:text-[var(--ink)]"
                     }`}
                     onClick={() => setSegment("FNO")}
                     type="button"
-                    disabled={isSymbolSelected}
                   >
                     FnO
                   </button>
                 </div>
               </div>
             </div>
+
+            {/* FNO Specific Fields */}
+            {segment === "FNO" && (() => {
+              const queryRaw = symbolQuery.toUpperCase().replace(/\s+/g, "");
+              const isOptionAutoDetected = /^([A-Z]+?)([\d]*[A-Z]{3}\d{0,2})(\d+)(CE|PE)$/.test(queryRaw);
+              const isFutAutoDetected = /^([A-Z]+?)([\d]*[A-Z]{3}\d{0,2})FUT$/.test(queryRaw);
+              const isAutoDetected = isOptionAutoDetected || isFutAutoDetected;
+
+              return (
+                <div className="grid grid-cols-3 gap-3 animate-[fadeIn_0.2s_ease-out]">
+                  {/* Expiry */}
+                  <div>
+                    <label className="block text-[11.5px] font-bold text-[var(--muted)] uppercase tracking-[0.05em] mb-1.5">
+                      Expiry
+                    </label>
+                    <input
+                      className={`w-full rounded-lg border border-[var(--line)] py-2 px-3 text-[13px] font-medium text-[var(--ink)] transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--brand)] ${
+                        isAutoDetected ? "bg-[var(--surface)] opacity-70 cursor-not-allowed" : "bg-white"
+                      }`}
+                      onChange={(e) => setExpiry(e.target.value)}
+                      placeholder="e.g. 26JUN"
+                      type="text"
+                      value={expiry}
+                      disabled={isAutoDetected}
+                    />
+                  </div>
+
+                  {/* Strike Price */}
+                  <div>
+                    <label className="block text-[11.5px] font-bold text-[var(--muted)] uppercase tracking-[0.05em] mb-1.5">
+                      Strike Price
+                    </label>
+                    <input
+                      className={`w-full rounded-lg border border-[var(--line)] py-2 px-3 text-[13px] font-medium text-[var(--ink)] transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--brand)] ${
+                        isAutoDetected ? "bg-[var(--surface)] opacity-70 cursor-not-allowed" : "bg-white"
+                      }`}
+                      onChange={(e) => setStrikePrice(e.target.value)}
+                      placeholder="e.g. 1350"
+                      type="number"
+                      step="0.05"
+                      value={strikePrice}
+                      disabled={isAutoDetected}
+                    />
+                  </div>
+
+                  {/* Option Type */}
+                  <div>
+                    <label className="block text-[11.5px] font-bold text-[var(--muted)] uppercase tracking-[0.05em] mb-1.5">
+                      Option Type
+                    </label>
+                    <div className="relative">
+                      <select
+                        className={`w-full appearance-none rounded-lg border border-[var(--line)] py-2 px-3.5 text-[12.5px] font-medium text-[var(--ink)] transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--brand)] ${
+                          isOptionAutoDetected ? "bg-[var(--surface)] opacity-70 cursor-not-allowed" : "bg-white"
+                        }`}
+                        onChange={(e) => setOptionType(e.target.value as "CE" | "PE" | "")}
+                        value={optionType}
+                        disabled={isOptionAutoDetected}
+                      >
+                        <option value="">Select</option>
+                        <option value="CE">CE (Call)</option>
+                        <option value="PE">PE (Put)</option>
+                      </select>
+                      <Icon
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-2)] pointer-events-none h-3 w-3"
+                        name="chevronDown"
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* Toggle Row 2: Position & Category */}
             <div className="grid grid-cols-2 gap-4">

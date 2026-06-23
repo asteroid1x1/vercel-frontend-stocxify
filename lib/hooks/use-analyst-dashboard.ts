@@ -104,20 +104,17 @@ export function useDashboardMetrics() {
         // Derive total subscriber count from plan subscriber counts
         const totalSubscribers = planList.reduce((sum, p) => sum + (p.subscribers_count ?? 0), 0);
 
-        // Derive MRR: sum of active plans × price (normalise YEAR to monthly)
-        const mrr = planList
-          .filter((p) => p.status === "ACTIVE")
-          .reduce((sum, p) => {
-            const monthlyPrice =
-              p.billing_cycle === "YEAR"
-                ? p.price / 12
-                : p.billing_cycle === "QUARTER"
-                  ? p.price / 3
-                  : p.billing_cycle === "WEEK"
-                    ? p.price * 4
-                    : p.price;
-            return sum + monthlyPrice * (p.subscribers_count ?? 0);
-          }, 0);
+        // Derive MRR: sum of active plans' actual subscription revenue
+        const mrr = activeSubscriptions.reduce((sum: number, sub: any) => {
+          const plan = planList.find((p) => p.plan_id === sub.plan_id);
+          if (plan && plan.status !== "ACTIVE") return sum;
+          
+          let monthlyAmount = sub.amount || 0;
+          if (sub.billing_cycle === "YEAR") monthlyAmount /= 12;
+          else if (sub.billing_cycle === "QUARTER") monthlyAmount /= 3;
+          else if (sub.billing_cycle === "WEEK") monthlyAmount *= 4;
+          return sum + monthlyAmount;
+        }, 0);
 
         // Win rate: fraction of CLOSED trades that hit target (pnl_pct > 0)
         const closedRes = await fetch("/api/analyst/trades?status=CLOSED&limit=100", {
@@ -482,10 +479,20 @@ export function useSubscriptionPlans() {
               : []
       ).map((p: any) => {
         const planSubscribers = activeSubscriptions.filter((s: any) => s.plan_id === p.plan_id);
+        
+        const estRevenue = planSubscribers.reduce((sum: number, sub: any) => {
+          let monthlyAmount = sub.amount || 0;
+          if (sub.billing_cycle === "YEAR") monthlyAmount /= 12;
+          else if (sub.billing_cycle === "QUARTER") monthlyAmount /= 3;
+          else if (sub.billing_cycle === "WEEK") monthlyAmount *= 4;
+          return sum + monthlyAmount;
+        }, 0);
+
         return {
           ...p,
           status: p.status || (p.is_active ? "ACTIVE" : "INACTIVE"),
           subscribers_count: planSubscribers.length,
+          est_monthly_revenue: Math.round(estRevenue),
         };
       });
 
@@ -564,19 +571,17 @@ export function useSubscriptionPlansStats() {
 
       const totalSubscribers = list.reduce((sum, p) => sum + (p.subscribers_count ?? 0), 0);
 
-      const mrr = list
-        .filter((p) => p.status === "ACTIVE")
-        .reduce((sum, p) => {
-          const monthlyPrice =
-            p.billing_cycle === "YEAR"
-              ? p.price / 12
-              : p.billing_cycle === "QUARTER"
-                ? p.price / 3
-                : p.billing_cycle === "WEEK"
-                  ? p.price * 4
-                  : p.price;
-          return sum + monthlyPrice * (p.subscribers_count ?? 0);
-        }, 0);
+      const mrr = activeSubscriptions.reduce((sum: number, sub: any) => {
+        // Only count MRR for subscriptions belonging to ACTIVE plans (optional depending on business logic, but kept consistent with original)
+        const plan = list.find(p => p.plan_id === sub.plan_id);
+        if (plan && plan.status !== "ACTIVE") return sum;
+
+        let monthlyAmount = sub.amount || 0;
+        if (sub.billing_cycle === "YEAR") monthlyAmount /= 12;
+        else if (sub.billing_cycle === "QUARTER") monthlyAmount /= 3;
+        else if (sub.billing_cycle === "WEEK") monthlyAmount *= 4;
+        return sum + monthlyAmount;
+      }, 0);
 
       setStats({
         total_subscribers: totalSubscribers,
@@ -598,4 +603,52 @@ export function useSubscriptionPlansStats() {
   }, [load]);
 
   return { stats, isLoading, isError, refetch: load };
+}
+
+export interface Coupon {
+  coupon_id: string;
+  analyst_id: string;
+  code: string;
+  type: 'PERCENTAGE' | 'FLAT';
+  discount_value: number;
+  plan_ids: string[];
+  availability: 'EVERYONE' | 'SPECIFIC';
+  quantity_total: number | null;
+  quantity_used: number;
+  valid_from?: string;
+  valid_to?: string;
+  is_case_insensitive: boolean;
+  is_active: boolean;
+  created_at: string;
+}
+
+export function useAnalystCoupons() {
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isError, setIsError] = useState(false);
+
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/analyst/plans/coupons", {
+        credentials: "same-origin",
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setCoupons(Array.isArray(json) ? json : json.data ?? []);
+      setIsError(false);
+    } catch {
+      setCoupons([]);
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  return { coupons, isLoading, isError, refetch: load };
 }

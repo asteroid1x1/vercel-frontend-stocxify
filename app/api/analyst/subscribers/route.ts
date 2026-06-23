@@ -119,18 +119,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const enrichedSubscriptions = subList.map((sub: any) => {
       const plan = plans.find((p: any) => p.plan_id === sub.plan_id);
       const user = userMap.get(sub.user_id);
+      
+      const batch = plan?.batches?.find((b: any) => b.batch_id === sub.batch_id);
+      const days = batch ? batch.days : (plan?.days || 30);
+      const baseAmount = batch ? (batch.discounted_price || batch.price) : (plan?.price || 0);
 
       let billingCycle: "WEEK" | "MONTH" | "QUARTER" | "YEAR" = "MONTH";
-      if (plan) {
-        if (plan.days === 7) billingCycle = "WEEK";
-        else if (plan.days === 30) billingCycle = "MONTH";
-        else if (plan.days === 90) billingCycle = "QUARTER";
-        else if (plan.days === 365) billingCycle = "YEAR";
-      }
+      if (days === 7) billingCycle = "WEEK";
+      else if (days === 30) billingCycle = "MONTH";
+      else if (days === 90) billingCycle = "QUARTER";
+      else if (days >= 365) billingCycle = "YEAR";
 
       return {
         subscription_id: sub.subscription_id,
         user_id: sub.user_id,
+        plan_id: sub.plan_id,
+        batch_id: sub.batch_id,
         user_name: user?.name || "Anonymous Subscriber",
         user_avatar: user?.profile_pic_url || undefined,
         user_email: user?.email || undefined,
@@ -139,7 +143,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         subscribed_at: sub.start_date || sub.created_at,
         end_date: sub.end_date,
         status: sub.status,
-        amount: sub.payment?.amount || plan?.price || 0,
+        amount: sub.payment?.amount || baseAmount,
       };
     });
 

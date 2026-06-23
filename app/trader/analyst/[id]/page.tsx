@@ -10,6 +10,7 @@ type PlanBatch = {
   batch_id: string;
   name: string;
   price: number;
+  discounted_price?: number;
   days: number;
   billing_cycle: string;
   is_active?: boolean;
@@ -23,7 +24,10 @@ type Plan = {
   description?: string;
   days: number;
   price: number;
-  segment: string;
+  segment?: string;
+  segments?: string[];
+  horizons?: string[];
+  risk_level?: string;
   features?: string[];
   subscriber_count?: number;
   batches?: PlanBatch[];
@@ -46,11 +50,12 @@ type Trade = {
 };
 
 const gradients = [
-  "linear-gradient(135deg,#3B82F6,#2D5BE3)",
-  "linear-gradient(135deg,#8B5CF6,#6D28D9)",
-  "linear-gradient(135deg,#F59E0B,#D97706)",
-  "linear-gradient(135deg,#10B981,#059669)",
-  "linear-gradient(135deg,#EF4444,#DC2626)",
+  "linear-gradient(135deg, #3B82F6 0%, #2D5BE3 100%)",
+  "linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%)",
+  "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)",
+  "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+  "linear-gradient(135deg, #EF4444 0%, #DC2626 100%)",
+  "linear-gradient(135deg, #EC4899 0%, #DB2777 100%)",
 ];
 
 function getGradient(id?: string): string {
@@ -169,9 +174,7 @@ export default function AnalystDetailPage() {
   };
 
   useEffect(() => {
-    Promise.resolve().then(() => {
-      fetchData();
-    });
+    fetchData();
   }, [fetchData]);
 
   // Compute performance stats from trades
@@ -179,345 +182,343 @@ export default function AnalystDetailPage() {
   const totalClosed = closedTrades.length;
   const winningTrades = closedTrades.filter((t) => (t.pnl_percent ?? 0) > 0).length;
   const winRate = totalClosed > 0 ? Math.round((winningTrades / totalClosed) * 100) : 0;
-  const avgPnl =
-    totalClosed > 0
-      ? closedTrades.reduce((sum, t) => sum + (t.pnl_percent ?? 0), 0) / totalClosed
-      : 0;
+  const avgPnl = totalClosed > 0 ? closedTrades.reduce((sum, t) => sum + (t.pnl_percent ?? 0), 0) / totalClosed : 0;
+
+  const getRiskStyles = (risk: string) => {
+    if (risk === "HIGH") return "text-red-700 bg-red-50 border-red-200";
+    if (risk === "LOW") return "text-emerald-700 bg-emerald-50 border-emerald-200";
+    return "text-orange-700 bg-orange-50 border-orange-200";
+  };
 
   if (loading) {
     return (
-      <div className="px-6 py-6 lg:px-8 lg:py-8 max-w-[900px] mx-auto animate-pulse">
-        <div className="flex items-start gap-5 mb-8">
-          <div className="h-16 w-16 rounded-2xl bg-[var(--line)]" />
-          <div>
-            <div className="h-6 w-40 rounded bg-[var(--line)] mb-2" />
-            <div className="h-4 w-28 rounded bg-[var(--line)]" />
+      <div className="px-6 py-8 lg:px-8 max-w-[1000px] mx-auto animate-pulse flex flex-col gap-8">
+        <div className="h-6 w-32 rounded bg-[var(--line)]" />
+        <div className="flex items-start gap-6">
+          <div className="h-20 w-20 rounded-2xl bg-[var(--line)]" />
+          <div className="pt-2 flex flex-col gap-3">
+            <div className="h-7 w-48 rounded bg-[var(--line)]" />
+            <div className="h-5 w-64 rounded bg-[var(--line)]" />
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="h-24 rounded-xl bg-[var(--line)]" />
-          <div className="h-24 rounded-xl bg-[var(--line)]" />
-          <div className="h-24 rounded-xl bg-[var(--line)]" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="h-28 rounded-2xl bg-[var(--line)]" />
+          <div className="h-28 rounded-2xl bg-[var(--line)]" />
+          <div className="h-28 rounded-2xl bg-[var(--line)]" />
+          <div className="h-28 rounded-2xl bg-[var(--line)]" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="px-6 py-6 lg:px-8 lg:py-8 max-w-[900px] mx-auto">
-      {/* Back Link */}
-      <Link
-        href="/trader/discover"
-        className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[var(--muted)] hover:text-[var(--brand)] transition-colors mb-6"
-      >
-        <span className="text-[11px]">←</span>
-        Back to Discover
-      </Link>
-
-      {/* Analyst Header */}
-      <div className="flex items-start gap-5 mb-8">
-        <div
-          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-[22px] font-extrabold text-white"
-          style={{ background: getGradient(analystId) }}
+    <div className="min-h-screen bg-[#fafafa]">
+      <div className="px-6 py-8 lg:px-8 lg:py-10 max-w-[1100px] mx-auto">
+        
+        {/* Back Link */}
+        <Link
+          href="/trader/discover"
+          className="inline-flex items-center gap-2 text-[13px] font-bold text-[var(--muted)] hover:text-slate-900 transition-colors mb-8 group"
         >
-          {getInitials(analystName)}
-        </div>
-        <div>
-          <h1 className="text-[22px] font-extrabold tracking-[-0.5px] text-[var(--ink)]">
-            {analystName}
-          </h1>
-          <div className="mt-1 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-[var(--green-light)] px-2.5 py-0.5 text-[11px] font-bold text-[var(--green)]">
-              <Icon name="shieldCheck" className="h-3 w-3" />
-              SEBI Verified
-            </span>
-            <span className="text-[12px] text-[var(--muted)]">ID: {analystId}</span>
+          <div className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white shadow-sm transition-transform group-hover:-translate-x-1">
+            <Icon name="arrowRight" className="h-3 w-3 rotate-180" />
           </div>
-        </div>
-      </div>
+          Back to Discover
+        </Link>
 
-      {/* Performance Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-8">
-        <div className="rounded-xl border border-[var(--line)] bg-white p-4 text-center">
-          <div className="text-[22px] font-extrabold text-[var(--ink)]">{totalClosed}</div>
-          <div className="text-[11px] text-[var(--muted)]">Total Trades</div>
-        </div>
-        <div className="rounded-xl border border-[var(--line)] bg-white p-4 text-center">
-          <div className="text-[22px] font-extrabold text-[var(--green)]">{winRate}%</div>
-          <div className="text-[11px] text-[var(--muted)]">Win Rate</div>
-        </div>
-        <div className="rounded-xl border border-[var(--line)] bg-white p-4 text-center">
+        {/* Analyst Profile Header */}
+        <div className="flex flex-col md:flex-row md:items-center gap-6 mb-10 bg-white p-6 rounded-3xl border border-[var(--line)] shadow-sm">
           <div
-            className={`text-[22px] font-extrabold ${avgPnl >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"}`}
+            className="flex h-20 w-20 shrink-0 items-center justify-center rounded-2xl text-[26px] font-black text-white shadow-md"
+            style={{ background: getGradient(analystId) }}
           >
-            {avgPnl >= 0 ? "+" : ""}
-            {avgPnl.toFixed(1)}%
+            {getInitials(analystName)}
           </div>
-          <div className="text-[11px] text-[var(--muted)]">Avg P&L</div>
-        </div>
-        <div className="rounded-xl border border-[var(--line)] bg-white p-4 text-center">
-          <div className="text-[22px] font-extrabold text-[var(--brand)]">{plans.length}</div>
-          <div className="text-[11px] text-[var(--muted)]">Active Plans</div>
-        </div>
-      </div>
-
-      {/* Plans */}
-      {plans.length > 0 && (
-        <section className="mb-8">
-          <h2 className="text-[16px] font-bold text-[var(--ink)] mb-4 flex items-center gap-2">
-            <Icon name="listChecks" className="h-4 w-4 text-[var(--brand)]" />
-            Subscription Plans
-          </h2>
-          {subError && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-red-200 bg-red-50 px-3.5 py-3 text-[13px] text-red-700">
-              <Icon className="mt-0.5 h-4 w-4 shrink-0" name="x" />
-              <span>{subError}</span>
+          <div className="flex-1">
+            <h1 className="text-[26px] font-black tracking-tight text-[var(--ink)] mb-2">
+              {analystName}
+            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-extrabold text-emerald-700 border border-emerald-200">
+                <Icon name="shieldCheck" className="h-3.5 w-3.5" strokeWidth={2.5} />
+                SEBI Verified
+              </span>
+              <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-500 border border-slate-200">
+                ID: {analystId}
+              </span>
             </div>
-          )}
-          {subSuccess && (
-            <div className="mb-4 flex items-start gap-2.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3.5 py-3 text-[13px] text-emerald-700">
-              <Icon className="mt-0.5 h-4 w-4 shrink-0" name="circleCheck" />
-              <span>{subSuccess}</span>
+          </div>
+        </div>
+
+        {/* Performance Stats */}
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-12">
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5 flex flex-col justify-center items-center gap-1 shadow-sm transition-all hover:border-slate-300">
+            <span className="text-[12px] font-bold text-[var(--muted)] uppercase tracking-wider">Total Trades</span>
+            <div className="text-[28px] font-black text-[var(--ink)] tracking-tight">{totalClosed}</div>
+          </div>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5 flex flex-col justify-center items-center gap-1 shadow-sm transition-all hover:border-slate-300">
+            <span className="text-[12px] font-bold text-[var(--muted)] uppercase tracking-wider">Win Rate</span>
+            <div className="text-[28px] font-black text-emerald-600 tracking-tight">{winRate}%</div>
+          </div>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5 flex flex-col justify-center items-center gap-1 shadow-sm transition-all hover:border-slate-300">
+            <span className="text-[12px] font-bold text-[var(--muted)] uppercase tracking-wider">Avg P&L</span>
+            <div className={`text-[28px] font-black tracking-tight ${avgPnl >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+              {avgPnl >= 0 ? "+" : ""}{avgPnl.toFixed(1)}%
             </div>
-          )}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {plans.map((plan) => {
-              return (
-                <div
-                  key={plan.plan_id}
-                  className="rounded-xl border-[1.5px] border-[var(--line)] bg-white p-5 transition-all hover:border-[var(--brand-mid)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.06)] flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-[14px] font-bold text-[var(--ink)]">{plan.name}</h3>
-                      <span className="rounded-full bg-[var(--brand-light)] px-2.5 py-0.5 text-[11px] font-semibold text-[var(--brand)]">
-                        {plan.segment}
-                      </span>
-                    </div>
-                    {plan.description && (
-                      <p className="text-[12px] text-[var(--muted)] leading-relaxed mb-3">
-                        {plan.description}
-                      </p>
-                    )}
-                    {plan.features && plan.features.length > 0 && (
-                      <ul className="mb-4 flex flex-col gap-1">
-                        {plan.features.map((f) => (
-                          <li
-                            key={f}
-                            className="flex items-center gap-2 text-[12px] text-[var(--muted)]"
-                          >
-                            <Icon name="check" className="h-3 w-3 text-[var(--green)]" />
-                            {f}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+          </div>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5 flex flex-col justify-center items-center gap-1 shadow-sm transition-all hover:border-slate-300">
+            <span className="text-[12px] font-bold text-[var(--muted)] uppercase tracking-wider">Active Plans</span>
+            <div className="text-[28px] font-black text-blue-600 tracking-tight">{plans.length}</div>
+          </div>
+        </div>
 
-                  <div>
-                    {plan.batches && plan.batches.filter((b) => b.is_active !== false).length > 0 ? (
-                      <div className="mt-4 pt-4 border-t border-[var(--line)] flex flex-col gap-3">
-                        <span className="text-[11px] font-extrabold text-[var(--muted-2)] uppercase tracking-wider block">
-                          Select Batch to Subscribe
-                        </span>
-                        <div className="flex flex-col gap-2">
-                          {plan.batches
-                            .filter((b) => b.is_active !== false)
-                            .map((batch) => {
-                              const isBatchSubbed = isSubscribedToPlanOrBatch(plan.plan_id, batch.batch_id);
-                              const subKey = `${plan.plan_id}_${batch.batch_id}`;
-                              const isThisSubmitting = isSubmitting[subKey];
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 items-start">
+          
+          {/* Subscription Plans (Left Column) */}
+          <section className="flex flex-col gap-5">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                <Icon name="listChecks" className="h-5 w-5" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-[18px] font-black text-[var(--ink)]">Advisory Plans</h2>
+                <p className="text-[13px] font-medium text-[var(--muted)]">Choose a plan to get actionable trade alerts.</p>
+              </div>
+            </div>
 
-                              return (
-                                <div
-                                  key={batch.batch_id}
-                                  className="flex items-center justify-between p-3 rounded-lg border border-[var(--line)] bg-slate-50/50 hover:bg-slate-50 transition-colors"
-                                >
-                                  <div>
-                                    <div className="text-[12.5px] font-bold text-[var(--ink)] leading-tight">{batch.name}</div>
-                                    <div className="text-[11.5px] text-[var(--muted-2)] font-semibold mt-0.5">
-                                      {formatCurrency(batch.price)} / {batch.days} days
-                                    </div>
-                                  </div>
-                                  {isBatchSubbed ? (
-                                    <button
-                                      type="button"
-                                      disabled
-                                      className="rounded-lg bg-[var(--green-light)] px-3 py-1.5 text-[11.5px] font-bold text-[var(--green)] border border-[var(--green)]/20 cursor-default"
-                                    >
-                                      Subscribed
-                                    </button>
-                                  ) : (
-                                    <button
-                                      type="button"
-                                      disabled={isThisSubmitting}
-                                      onClick={() => handleSubscribe(plan.plan_id, batch.batch_id)}
-                                      className="rounded-lg bg-[var(--brand)] px-3 py-1.5 text-[11.5px] font-bold text-white transition-colors hover:bg-[var(--brand-dark)] disabled:opacity-50 cursor-pointer"
-                                    >
-                                      {isThisSubmitting ? "Subbing..." : "Subscribe"}
-                                    </button>
-                                  )}
-                                </div>
-                              );
-                            })}
+            {subError && (
+              <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] font-bold text-red-700 shadow-sm">
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-red-600" name="x" strokeWidth={3} />
+                <span>{subError}</span>
+              </div>
+            )}
+            {subSuccess && (
+              <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[13px] font-bold text-emerald-700 shadow-sm">
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" name="circleCheck" strokeWidth={3} />
+                <span>{subSuccess}</span>
+              </div>
+            )}
+
+            {plans.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-slate-500 font-medium">
+                No active plans available from this analyst at the moment.
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {plans.map((plan) => {
+                  const displaySegments = plan.segments && plan.segments.length > 0 ? plan.segments : (plan.segment ? [plan.segment] : []);
+                  
+                  return (
+                    <article key={plan.plan_id} className="rounded-2xl border border-[var(--line)] bg-white p-6 shadow-sm flex flex-col transition-all hover:border-slate-300 hover:shadow-md">
+                      
+                      {/* Plan Header */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between gap-4 mb-2">
+                          <h3 className="text-[18px] font-black text-[var(--ink)] leading-tight">{plan.name}</h3>
+                          {plan.risk_level && (
+                            <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 ${getRiskStyles(plan.risk_level)}`}>
+                              <Icon name="shield" className="h-3 w-3" />
+                              <span className="text-[10px] font-extrabold tracking-wide">{plan.risk_level} RISK</span>
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-between pt-3 border-t border-[var(--line)]">
-                        <div>
-                          <span className="text-[18px] font-extrabold text-[var(--ink)]">
-                            {formatCurrency(plan.price)}
-                          </span>
-                          <span className="text-[12px] text-[var(--muted)]"> / {plan.days} days</span>
-                        </div>
-                        {isSubscribedToPlanOrBatch(plan.plan_id) ? (
-                          <button
-                            type="button"
-                            disabled
-                            className="rounded-lg bg-[var(--green-light)] px-4 py-2 text-[13px] font-bold text-[var(--green)] border border-[var(--green)]/20 cursor-default"
-                          >
-                            Subscribed
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled={isSubmitting[plan.plan_id]}
-                            onClick={() => handleSubscribe(plan.plan_id)}
-                            className="rounded-lg bg-[var(--brand)] px-4 py-2 text-[13px] font-bold text-white transition-colors hover:bg-[var(--brand-dark)] disabled:opacity-50 cursor-pointer"
-                          >
-                            {isSubmitting[plan.plan_id] ? "Subscribing..." : "Subscribe"}
-                          </button>
+                        {plan.description && (
+                          <p className="text-[13.5px] font-medium leading-relaxed text-[var(--muted-2)]">
+                            {plan.description}
+                          </p>
                         )}
                       </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
 
-      {/* Recent Trades */}
-      {trades.length > 0 && (
-        <section>
-          <h2 className="text-[16px] font-bold text-[var(--ink)] mb-4 flex items-center gap-2">
-            <Icon name="lineChart" className="h-4 w-4 text-[var(--brand)]" />
-            Recent Trades
-          </h2>
-          <div className="rounded-xl border border-[var(--line)] bg-white overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-[13px]">
-                <thead>
-                  <tr className="border-b border-[var(--line)] bg-[var(--surface)]">
-                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
-                      Symbol
-                    </th>
-                    <th className="px-4 py-3 text-left text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
-                      Direction
-                    </th>
-                    <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
-                      Entry
-                    </th>
-                    <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
-                      Target
-                    </th>
-                    <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
-                      SL
-                    </th>
-                    <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
-                      Status
-                    </th>
-                    <th className="px-4 py-3 text-right text-[11px] font-bold uppercase tracking-[0.06em] text-[var(--muted)]">
-                      P&L
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
+                      {/* Badges / Features */}
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {displaySegments.map((seg) => (
+                          <span key={seg} className="inline-flex items-center rounded-lg bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-700 border border-blue-100">
+                            {seg}
+                          </span>
+                        ))}
+                        {plan.horizons?.map((hz) => (
+                          <span key={hz} className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600 text-[11px] font-bold">
+                            <Icon name="clock" className="h-3 w-3 mr-1" />
+                            {hz}
+                          </span>
+                        ))}
+                      </div>
+
+                      {plan.features && plan.features.length > 0 && (
+                        <div className="mb-6 rounded-xl bg-slate-50 border border-slate-100 p-4">
+                          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {plan.features.map((f) => (
+                              <li key={f} className="flex items-start gap-2 text-[12.5px] font-semibold text-slate-600">
+                                <Icon name="check" className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" strokeWidth={3} />
+                                <span className="leading-snug">{f}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+
+                      {/* Batches / Subscribe Action */}
+                      <div className="mt-auto pt-5 border-t border-[var(--line)]">
+                        {plan.batches && plan.batches.filter((b) => b.is_active !== false).length > 0 ? (
+                          <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[12px] font-extrabold text-[var(--ink)]">Subscription Tiers</span>
+                            </div>
+                            <div className="flex flex-col gap-2.5">
+                              {plan.batches
+                                .filter((b) => b.is_active !== false)
+                                .map((batch) => {
+                                  const isBatchSubbed = isSubscribedToPlanOrBatch(plan.plan_id, batch.batch_id);
+                                  const subKey = `${plan.plan_id}_${batch.batch_id}`;
+                                  const isThisSubmitting = isSubmitting[subKey];
+
+                                  return (
+                                    <div
+                                      key={batch.batch_id}
+                                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition-colors shadow-[0_2px_8px_rgba(0,0,0,0.02)]"
+                                    >
+                                      <div className="flex flex-col">
+                                        <span className="text-[14px] font-bold text-slate-900 leading-none mb-1.5">{batch.name}</span>
+                                        <div className="flex items-center gap-2">
+                                          {batch.discounted_price && (
+                                            <span className="text-[12px] font-semibold line-through text-slate-400">₹{batch.price}</span>
+                                          )}
+                                          <span className="text-[14px] font-black text-slate-800">₹{batch.discounted_price || batch.price}</span>
+                                          <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">/ {batch.days} Days</span>
+                                        </div>
+                                      </div>
+                                      {isBatchSubbed ? (
+                                        <button
+                                          type="button" disabled
+                                          className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-4 py-2.5 text-[12.5px] font-extrabold text-emerald-700 border border-emerald-200 cursor-default"
+                                        >
+                                          <Icon name="circleCheck" className="h-4 w-4" />
+                                          Active
+                                        </button>
+                                      ) : (
+                                        <button
+                                          type="button" disabled={isThisSubmitting}
+                                          onClick={() => handleSubscribe(plan.plan_id, batch.batch_id)}
+                                          className="rounded-xl bg-slate-900 px-5 py-2.5 text-[12.5px] font-bold text-white transition-all hover:bg-black hover:shadow-md disabled:opacity-50 active:scale-95"
+                                        >
+                                          {isThisSubmitting ? "Processing..." : "Subscribe"}
+                                        </button>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-[11px] font-bold text-[var(--muted)] uppercase tracking-wider mb-0.5">Price</span>
+                              <div className="flex items-baseline gap-1">
+                                <span className="text-[20px] font-black text-slate-900">{formatCurrency(plan.price)}</span>
+                                <span className="text-[12.5px] font-bold text-slate-500">/ {plan.days} days</span>
+                              </div>
+                            </div>
+                            {isSubscribedToPlanOrBatch(plan.plan_id) ? (
+                              <button
+                                type="button" disabled
+                                className="flex items-center gap-1.5 rounded-xl bg-emerald-50 px-5 py-3 text-[13px] font-extrabold text-emerald-700 border border-emerald-200 cursor-default"
+                              >
+                                <Icon name="circleCheck" className="h-4.5 w-4.5" />
+                                Active
+                              </button>
+                            ) : (
+                              <button
+                                type="button" disabled={isSubmitting[plan.plan_id]}
+                                onClick={() => handleSubscribe(plan.plan_id)}
+                                className="rounded-xl bg-slate-900 px-6 py-3 text-[13px] font-bold text-white transition-all hover:bg-black hover:shadow-md disabled:opacity-50 active:scale-95"
+                              >
+                                {isSubmitting[plan.plan_id] ? "Processing..." : "Subscribe"}
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Recent Trades (Right Column) */}
+          <section className="flex flex-col gap-5 sticky top-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+                <Icon name="lineChart" className="h-5 w-5" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h2 className="text-[18px] font-black text-[var(--ink)]">Recent Trades</h2>
+                <p className="text-[13px] font-medium text-[var(--muted)]">Latest performance history.</p>
+              </div>
+            </div>
+            
+            <div className="rounded-2xl border border-[var(--line)] bg-white overflow-hidden shadow-sm">
+              {trades.length === 0 ? (
+                <div className="p-8 text-center text-[13px] font-medium text-slate-500">
+                  No trades recorded yet.
+                </div>
+              ) : (
+                <div className="flex flex-col">
                   {trades.map((trade) => {
-                    const isLong = trade.direction === "LONG";
+                    const isLong = trade.direction === "LONG" || trade.direction === "BUY";
                     const isLive = trade.status === "LIVE";
                     return (
-                      <tr
-                        key={trade.trade_id}
-                        className="border-b border-[var(--line)] last:border-0 hover:bg-[var(--surface)] transition-colors"
-                      >
-                        <td className="px-4 py-3 font-bold text-[var(--ink)]">{trade.symbol}</td>
-                        <td className="px-4 py-3">
-                          <span
-                            className={[
-                              "rounded-md px-2 py-[2px] text-[11px] font-extrabold",
-                              isLong
-                                ? "bg-[var(--green-light)] text-[var(--green)]"
-                                : "bg-[var(--red-light)] text-[var(--red)]",
-                            ].join(" ")}
-                          >
-                            {trade.direction}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-[var(--ink)]">
-                          {formatCurrency(trade.entry_price)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-[var(--green)]">
-                          {formatCurrency(trade.target)}
-                        </td>
-                        <td className="px-4 py-3 text-right font-mono text-[var(--red)]">
-                          {formatCurrency(trade.stop_loss)}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {isLive ? (
-                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[var(--green)]">
-                              <span className="h-[5px] w-[5px] animate-[blink_1.5s_infinite] rounded-full bg-[var(--green)]" />
-                              LIVE
+                      <div key={trade.trade_id} className="flex flex-col p-4 border-b border-[var(--line)] last:border-0 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2.5">
+                            <span className={`flex h-8 w-8 items-center justify-center rounded-lg text-[10px] font-extrabold ${isLong ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                              {isLong ? 'LONG' : 'SHRT'}
                             </span>
-                          ) : (
-                            <span className="text-[11px] font-semibold text-[var(--muted)]">
-                              {trade.status.replace(/_/g, " ")}
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          {trade.pnl_percent !== undefined && trade.pnl_percent !== null ? (
-                            <span
-                              className={`font-bold ${
-                                trade.pnl_percent >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"
-                              }`}
-                            >
-                              {trade.pnl_percent >= 0 ? "+" : ""}
-                              {trade.pnl_percent.toFixed(2)}%
-                            </span>
-                          ) : (
-                            <span className="text-[var(--muted-2)]">—</span>
-                          )}
-                        </td>
-                      </tr>
+                            <div>
+                              <div className="text-[14px] font-black text-slate-900 leading-none">{trade.symbol}</div>
+                              <div className="text-[11px] font-bold text-slate-400 mt-1">{trade.segment}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            {isLive ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-600 border border-emerald-100">
+                                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
+                                LIVE
+                              </span>
+                            ) : (
+                              <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-black ${trade.pnl_percent && trade.pnl_percent >= 0 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                {trade.pnl_percent !== undefined && trade.pnl_percent !== null ? (
+                                  `${trade.pnl_percent >= 0 ? '+' : ''}${trade.pnl_percent.toFixed(2)}%`
+                                ) : (
+                                  trade.status.replace(/_/g, " ")
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between bg-[#fafafa] rounded-lg p-2.5 border border-slate-100">
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Entry</span>
+                            <span className="text-[12.5px] font-bold text-slate-800">{formatCurrency(trade.entry_price)}</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Target</span>
+                            <span className="text-[12.5px] font-bold text-emerald-600">{formatCurrency(trade.target)}</span>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Stop Loss</span>
+                            <span className="text-[12.5px] font-bold text-red-600">{formatCurrency(trade.stop_loss)}</span>
+                          </div>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Empty State */}
-      {plans.length === 0 && trades.length === 0 && !loading && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--brand-light)] text-[var(--brand)]">
-            <Icon name="users" className="h-6 w-6" />
-          </div>
-          <h3 className="text-[15px] font-bold text-[var(--ink)] mb-1.5">Analyst not found</h3>
-          <p className="text-[13px] text-[var(--muted)] max-w-[300px] mb-4">
-            This analyst may not have active plans yet, or the ID is incorrect.
-          </p>
-          <Link
-            href="/trader/discover"
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--brand)] px-5 py-2.5 text-[13px] font-bold text-white hover:bg-[var(--brand-dark)]"
-          >
-            Browse Analysts
-          </Link>
+          </section>
         </div>
-      )}
+      </div>
     </div>
   );
 }

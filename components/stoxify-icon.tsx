@@ -55,6 +55,12 @@ export type IconName =
   | "apple"
   | "helpCircle"
   | "headset"
+  | "bold"
+  | "italic"
+  | "list"
+  | "grid"
+  | "trash"
+  | "ticket"
   | "loader";
 
 const icons: Record<IconName, string> = {
@@ -113,6 +119,12 @@ const icons: Record<IconName, string> = {
   helpCircle: "fa-solid fa-circle-question",
   headset: "fa-solid fa-headset",
   loader: "fa-solid fa-spinner",
+  bold: "fa-solid fa-bold",
+  italic: "fa-solid fa-italic",
+  list: "fa-solid fa-list",
+  grid: "fa-solid fa-border-all",
+  trash: "fa-solid fa-trash",
+  ticket: "fa-solid fa-ticket",
 };
 
 function getFontSize(className?: string): CSSProperties["fontSize"] {

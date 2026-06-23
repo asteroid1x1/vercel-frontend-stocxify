@@ -1,19 +1,26 @@
 export type TradeDirection = "LONG" | "SHORT" | "BUY" | "SELL";
-export type PlanBillingCycle = "WEEK" | "MONTH" | "QUARTER" | "YEAR";
+export type PlanBillingCycle = "DAY" | "WEEK" | "MONTH" | "QUARTER" | "YEAR";
 export type PlanStatus = "ACTIVE" | "INACTIVE";
 
 export interface PlanBatch {
   batch_id: string;
   name: string;
+  plan_type?: "SUBSCRIPTION" | "LIFETIME";
   price: number;
+  discounted_price?: number;
   days: number;
   billing_cycle: PlanBillingCycle;
+  description?: string;
   is_active?: boolean;
 }
 
 export interface SubscriptionPlan {
   plan_id: string;
   name: string;
+  description?: string;
+  risk_level?: string;
+  segments: string[];
+  horizons: string[];
   price: number;
   billing_cycle: PlanBillingCycle;
   status: PlanStatus;

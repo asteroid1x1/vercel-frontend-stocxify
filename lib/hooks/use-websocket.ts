@@ -61,7 +61,7 @@ export function useWebSocket(): UseWebSocketReturn {
 
       // Step 2: Determine the WebSocket URL
       const wsBaseUrl =
-        process.env.NEXT_PUBLIC_WS_URL || "wss://stoxify-backend-monolith.onrender.com";
+        process.env.NEXT_PUBLIC_WS_URL || "wss://stoxify-gateway.thankfulriver-811030ea.centralindia.azurecontainerapps.io/ws";
       const wsUrl = `${wsBaseUrl}/?channel_id=${channel_id}`;
 
       // Step 3: Open WebSocket connection

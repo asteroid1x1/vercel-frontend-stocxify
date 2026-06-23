@@ -16,6 +16,7 @@ const MAIN_NAV_ITEMS = [
     label: "Subscription Plans",
     icon: "creditCard" as const,
   },
+  { href: "/dashboard/discounts", label: "Discounts", icon: "ticket" as const },
   { href: "/dashboard/performance", label: "Performance", icon: "barChart" as const },
 ];
 

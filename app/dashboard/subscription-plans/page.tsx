@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Topbar } from "@/components/dashboard/topbar";
 import { MetricCard } from "@/components/dashboard/metric-card";
 import { Icon } from "@/components/stoxify-icon";
 import { useDashboard } from "@/components/dashboard/dashboard-context";
 import { useSubscriptionPlans, useSubscriptionPlansStats } from "@/lib/hooks/use-analyst-dashboard";
-import { PlanModal } from "@/components/dashboard/plan-modal";
 import type { SubscriptionPlan } from "@/lib/types/analyst";
 
 // Helper to format currency in Indian numbering system (Lakh/Crore)
@@ -50,29 +50,15 @@ function getBillingDesc(cycle: string): string {
   }
 }
 
-// Helper to compute monthly equivalent revenue
-function computeMonthlyRevenue(plan: SubscriptionPlan): number {
-  let monthlyPrice = plan.price;
-  if (plan.billing_cycle === "QUARTER") {
-    monthlyPrice = plan.price / 3;
-  } else if (plan.billing_cycle === "YEAR") {
-    monthlyPrice = plan.price / 12;
-  } else if (plan.billing_cycle === "WEEK") {
-    monthlyPrice = plan.price * 4;
-  }
-  return Math.round(monthlyPrice * plan.subscribers_count);
-}
+
 
 export default function SubscriptionPlansPage() {
+  const router = useRouter();
   const { showSuccessToast } = useDashboard();
 
   // SWR hooks
   const { plans, isLoading: isPlansLoading, refetch: refetchPlans } = useSubscriptionPlans();
   const { stats, isLoading: isStatsLoading, refetch: refetchStats } = useSubscriptionPlansStats();
-
-  // Modal control states
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | undefined>(undefined);
 
   // Toggle Plan status (Activate/Deactivate)
   const handleToggleStatus = async (planId: string, currentStatus: string, name: string) => {
@@ -117,24 +103,16 @@ export default function SubscriptionPlansPage() {
   };
 
   const handleOpenCreateModal = () => {
-    setSelectedPlan(undefined);
-    setIsModalOpen(true);
+    router.push("/dashboard/subscription-plans/create");
   };
 
   const handleOpenEditModal = (plan: SubscriptionPlan) => {
-    setSelectedPlan(plan);
-    setIsModalOpen(true);
-  };
-
-  const handleModalSave = (title: string, message: string) => {
-    showSuccessToast(title, message);
-    refetchPlans();
-    refetchStats();
+    router.push(`/dashboard/subscription-plans/${plan.plan_id}/edit`);
   };
 
   return (
     <>
-      <Topbar title="Subscription Plans" showUserProfile={true} />
+      <Topbar title="Batches" showUserProfile={true} />
 
       <div className="flex-1 p-6 flex flex-col gap-6 overflow-y-auto">
         {/* ─── Metrics / KPIs Strip ─── */}
@@ -171,15 +149,15 @@ export default function SubscriptionPlansPage() {
           ) : null}
         </div>
 
-        {/* ─── Manage Plans Section Header ─── */}
+        {/* ─── Manage Batches Section Header ─── */}
         <div className="flex items-center justify-between mt-2">
-          <h2 className="text-[18px] font-bold text-[var(--ink)] tracking-tight">Manage Plans</h2>
+          <h2 className="text-[18px] font-bold text-[var(--ink)] tracking-tight">Manage Batches</h2>
           <button
             className="flex items-center gap-1.5 rounded-lg bg-[var(--brand)] px-4 py-2 text-[12.5px] font-bold text-white hover:bg-[var(--brand-dark)] shadow-md shadow-[var(--brand)]/15 transition-all cursor-pointer"
             onClick={handleOpenCreateModal}
           >
             <Icon className="h-3.5 w-3.5" name="plus" />
-            <span>Create New Plan</span>
+            <span>Create New Batch</span>
           </button>
         </div>
 
@@ -192,13 +170,13 @@ export default function SubscriptionPlansPage() {
           </div>
         ) : plans.length === 0 ? (
           <div className="rounded-xl border border-[var(--line)] bg-white p-12 text-center text-[var(--muted-2)] text-[14px]">
-            No subscription plans found. Click &quot;Create New Plan&quot; to get started.
+            No batches found. Click &quot;Create New Batch&quot; to get started.
           </div>
         ) : (
           <div className="grid grid-cols-3 gap-6 max-[1120px]:grid-cols-2 max-[768px]:grid-cols-1">
-            {plans.map((plan) => {
+            {plans.map((plan: any) => {
               const isActive = plan.status === "ACTIVE";
-              const estMonthlyRevenue = computeMonthlyRevenue(plan);
+              const estMonthlyRevenue = plan.est_monthly_revenue || 0;
 
               return (
                 <div
@@ -217,7 +195,7 @@ export default function SubscriptionPlansPage() {
                         {plan.name}
                       </h3>
                       <p className="text-[12px] text-[var(--muted-2)] font-medium mt-0.5">
-                        {getBillingDesc(plan.billing_cycle)}
+                        Batch
                       </p>
                     </div>
                     <span
@@ -270,42 +248,22 @@ export default function SubscriptionPlansPage() {
                     </div>
                   )}
 
-                  {/* Manage Batches Link */}
+                  {/* Manage Pricing Link */}
                   <div className="mt-4">
                     <a
                       href={`/dashboard/subscription-plans/${plan.plan_id}/batches`}
                       className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-[var(--brand)]/20 bg-[var(--brand-light)] py-2.5 text-[12.5px] font-bold text-[var(--brand)] hover:bg-[var(--brand)]/10 hover:border-[var(--brand)]/40 shadow-sm transition-all active:scale-[0.98] text-center"
                     >
                       <Icon className="h-3.5 w-3.5 text-[var(--brand)]" name="listChecks" />
-                      <span>Manage Batches & Pricing</span>
+                      <span>Manage Subjects & Pricing</span>
                     </a>
                   </div>
 
-                  {/* Pricing Area with subtle card design */}
-                  <div className="mt-5 rounded-xl bg-gradient-to-br from-slate-50/50 to-slate-100/30 border border-slate-100 p-4 flex items-center justify-between shadow-[inset_0_1px_2px_rgba(0,0,0,0.01)]">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] font-bold text-[var(--muted-2)] uppercase tracking-wider block">
-                        Pricing Tier
-                      </span>
-                      <span className="text-[12px] font-bold text-[var(--brand)] block">
-                        {getBillingDesc(plan.billing_cycle)}
-                      </span>
-                    </div>
-                    <div className="flex items-baseline gap-0.5">
-                      <span className="text-[28px] font-black text-[var(--ink)] tracking-tight font-mono">
-                        {formatCurrency(plan.price)}
-                      </span>
-                      <span className="text-[12px] font-bold text-[var(--muted)]">
-                        /{getBillingLabel(plan.billing_cycle)}
-                      </span>
-                    </div>
-                  </div>
-
                   {/* Mini-Stats Grid */}
-                  <div className="mt-4.5 grid grid-cols-2 gap-4 rounded-xl border border-dashed border-[var(--line)] p-4 bg-slate-50/20">
+                  <div className="mt-5 grid grid-cols-2 gap-4 rounded-xl border border-dashed border-[var(--line)] p-4 bg-slate-50/20">
                     <div className="flex flex-col gap-0.5">
                       <span className="text-[10px] font-bold text-[var(--muted-2)] uppercase tracking-wider block">
-                        Subscribers
+                        Total Subscribers
                       </span>
                       <span className="text-[18px] font-black text-[var(--ink)] tracking-tight flex items-center gap-1.5">
                         <Icon className="h-4 w-4 text-[var(--brand)] opacity-80" name="users" />
@@ -351,15 +309,6 @@ export default function SubscriptionPlansPage() {
           </div>
         )}
       </div>
-
-      {/* Plan creation / editing modal overlay */}
-      {isModalOpen && (
-        <PlanModal
-          plan={selectedPlan}
-          onClose={() => setIsModalOpen(false)}
-          onSave={handleModalSave}
-        />
-      )}
     </>
   );
 }
