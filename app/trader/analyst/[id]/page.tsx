@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import Script from "next/script";
 
 import { Icon } from "@/components/stoxify-icon";
 
@@ -161,14 +162,58 @@ export default function AnalystDetailPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setSubError(data.error ?? "Failed to subscribe. Please try again.");
+        setIsSubmitting((prev) => ({ ...prev, [subKey]: false }));
         return;
       }
-      setSubSuccess("Successfully subscribed!");
-      // Refetch data to update subscription state
-      await fetchData();
+      
+      const rzpOptions = {
+        key: data.key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.amount,
+        currency: data.currency,
+        name: "Stoxify",
+        description: "Subscription Payment",
+        order_id: data.razorpay_order_id,
+        handler: async function (response: any) {
+          try {
+            const verifyRes = await fetch(`/api/trader/subscriptions/${data.subscription.subscription_id}/verify`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+            const verifyData = await verifyRes.json().catch(() => ({}));
+            if (!verifyRes.ok) {
+              setSubError(verifyData.error ?? "Payment verification failed.");
+            } else {
+              setSubSuccess("Successfully subscribed!");
+              await fetchData();
+            }
+          } catch (err) {
+            setSubError("Network error during verification.");
+          } finally {
+            setIsSubmitting((prev) => ({ ...prev, [subKey]: false }));
+          }
+        },
+        theme: { color: "#0f172a" },
+        modal: {
+          ondismiss: function() {
+            setIsSubmitting((prev) => ({ ...prev, [subKey]: false }));
+          }
+        }
+      };
+
+      const rzp = new (window as any).Razorpay(rzpOptions);
+      rzp.on('payment.failed', function (response: any){
+        setSubError(response.error.description || "Payment failed.");
+        setIsSubmitting((prev) => ({ ...prev, [subKey]: false }));
+      });
+      rzp.open();
+
     } catch {
       setSubError("Network error. Please try again.");
-    } finally {
       setIsSubmitting((prev) => ({ ...prev, [subKey]: false }));
     }
   };
@@ -213,6 +258,7 @@ export default function AnalystDetailPage() {
 
   return (
     <div className="min-h-screen bg-[#fafafa]">
+      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       <div className="px-6 py-8 lg:px-8 lg:py-10 max-w-[1100px] mx-auto">
         
         {/* Back Link */}
@@ -240,7 +286,7 @@ export default function AnalystDetailPage() {
             </h1>
             <div className="flex flex-wrap items-center gap-3">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-[12px] font-extrabold text-emerald-700 border border-emerald-200">
-                <Icon name="shieldCheck" className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <Icon name="shieldCheck" className="h-3.5 w-3.5" />
                 SEBI Verified
               </span>
               <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[12px] font-bold text-slate-500 border border-slate-200">
@@ -278,7 +324,7 @@ export default function AnalystDetailPage() {
           <section className="flex flex-col gap-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-                <Icon name="listChecks" className="h-5 w-5" strokeWidth={2.5} />
+                <Icon name="listChecks" className="h-5 w-5" />
               </div>
               <div>
                 <h2 className="text-[18px] font-black text-[var(--ink)]">Advisory Plans</h2>
@@ -288,13 +334,13 @@ export default function AnalystDetailPage() {
 
             {subError && (
               <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-[13px] font-bold text-red-700 shadow-sm">
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-red-600" name="x" strokeWidth={3} />
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-red-600" name="x" />
                 <span>{subError}</span>
               </div>
             )}
             {subSuccess && (
               <div className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-[13px] font-bold text-emerald-700 shadow-sm">
-                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" name="circleCheck" strokeWidth={3} />
+                <Icon className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" name="circleCheck" />
                 <span>{subSuccess}</span>
               </div>
             )}
@@ -317,7 +363,7 @@ export default function AnalystDetailPage() {
                           <h3 className="text-[18px] font-black text-[var(--ink)] leading-tight">{plan.name}</h3>
                           {plan.risk_level && (
                             <span className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 ${getRiskStyles(plan.risk_level)}`}>
-                              <Icon name="shield" className="h-3 w-3" />
+                              <Icon name="shieldCheck" className="h-3 w-3" />
                               <span className="text-[10px] font-extrabold tracking-wide">{plan.risk_level} RISK</span>
                             </span>
                           )}
@@ -338,7 +384,7 @@ export default function AnalystDetailPage() {
                         ))}
                         {plan.horizons?.map((hz) => (
                           <span key={hz} className="inline-flex items-center rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600 text-[11px] font-bold">
-                            <Icon name="clock" className="h-3 w-3 mr-1" />
+                            <Icon name="timer" className="h-3 w-3 mr-1" />
                             {hz}
                           </span>
                         ))}
@@ -349,7 +395,7 @@ export default function AnalystDetailPage() {
                           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                             {plan.features.map((f) => (
                               <li key={f} className="flex items-start gap-2 text-[12.5px] font-semibold text-slate-600">
-                                <Icon name="check" className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" strokeWidth={3} />
+                                <Icon name="check" className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
                                 <span className="leading-snug">{f}</span>
                               </li>
                             ))}
@@ -449,7 +495,7 @@ export default function AnalystDetailPage() {
           <section className="flex flex-col gap-5 sticky top-8">
             <div className="flex items-center gap-3 mb-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-                <Icon name="lineChart" className="h-5 w-5" strokeWidth={2.5} />
+                <Icon name="lineChart" className="h-5 w-5" />
               </div>
               <div>
                 <h2 className="text-[18px] font-black text-[var(--ink)]">Recent Trades</h2>

@@ -132,14 +132,14 @@ function PlanCard({ plan }: { plan: Plan }) {
       <div className="flex flex-wrap gap-2 mb-5">
         {plan.risk_level && (
           <div className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 ${getRiskStyles(plan.risk_level)}`}>
-            <Icon name="shield" className="h-3 w-3" />
+            <Icon name="shieldCheck" className="h-3 w-3" />
             <span className="text-[11px] font-extrabold tracking-wide">{plan.risk_level} RISK</span>
           </div>
         )}
         
         {plan.horizons && plan.horizons.length > 0 && (
           <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-slate-600">
-            <Icon name="clock" className="h-3 w-3" />
+            <Icon name="timer" className="h-3 w-3" />
             <span className="text-[11px] font-bold tracking-wide">
               {plan.horizons.slice(0, 2).join(", ")}
               {plan.horizons.length > 2 && " ..."}
@@ -343,7 +343,7 @@ export default function DiscoverPage() {
         ) : filteredPlans.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center rounded-3xl border border-[var(--line)] bg-white shadow-sm">
             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-500">
-              <Icon name="search" className="h-6 w-6" strokeWidth={2.5} />
+              <Icon name="search" className="h-6 w-6" />
             </div>
             <h3 className="text-[17px] font-bold text-[var(--ink)] mb-1.5">
               {search ? "No matching analysts" : "No analysts available"}
