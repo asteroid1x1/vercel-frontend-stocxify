@@ -43,7 +43,7 @@ export function useDashboardMetrics() {
     async function load() {
       setIsLoading(true);
       try {
-        // Fetch active trades count, subscription plans, and active subscribers in parallel
+        // Fetch active trades count, batches, and active subscribers in parallel
         const [tradesRes, plansRes, subscribersRes] = await Promise.all([
           fetch("/api/analyst/trades?status=LIVE&limit=100", {
             credentials: "same-origin",
@@ -139,7 +139,7 @@ export function useDashboardMetrics() {
           setMetrics({
             active_trades: { value: tradeList.length, change_pct: 0, new_today: 0 },
             total_subscribers: { value: totalSubscribers, change_pct: 0 },
-            win_rate: { value: Math.round(winRate * 10) / 10, change_pct: 0 },
+            total_batches: { value: planList.length, change_pct: 0 },
             monthly_revenue: { value: Math.round(mrr), change_pct: 0 },
           });
           setIsError(false);

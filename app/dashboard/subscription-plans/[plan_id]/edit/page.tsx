@@ -154,6 +154,7 @@ export default function EditBatchPage({ params }: { params: Promise<{ plan_id: s
     if (!name.trim()) newErrors.name = "Batch name is required";
     if (segments.length === 0) newErrors.segments = "Select at least one segment";
     if (horizons.length === 0) newErrors.horizons = "Select at least one horizon";
+    if (pricingTiers.length === 0) newErrors.form = "At least one plan is mandatory while updating a batch.";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);

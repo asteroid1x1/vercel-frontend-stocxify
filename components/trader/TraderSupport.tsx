@@ -32,7 +32,7 @@ const FAQ_ITEMS: FAQItem[] = [
     category: "subscriptions",
     question: "How do I subscribe to an analyst's plan?",
     answer:
-      "Navigate to the 'Discover' section from the sidebar, find an analyst you wish to follow, click 'View Analyst', select a premium subscription plan, and complete the secure payment process.",
+      "Navigate to the 'Discover' section from the sidebar, find an analyst you wish to follow, click 'View Analyst', select a premium batch, and complete the secure payment process.",
   },
   {
     id: "faq-3",

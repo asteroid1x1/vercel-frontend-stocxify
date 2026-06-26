@@ -35,7 +35,7 @@ export interface Trade {
   segment: string;
   segment_label?: string;
   trade_type?: "SIMPLE" | "PAIR";
-  trade_subtype?: "INTRADAY" | "SWING";
+  trade_subtype?: "INTRADAY" | "SWING" | "POSITIONAL" | "SHORT_TERM" | "MEDIUM_TERM" | "LONG_TERM";
   batch?: string;
   plan_id?: string;
   expiry?: string;
@@ -89,16 +89,18 @@ export interface DashboardMetric {
 export interface DashboardMetrics {
   active_trades: DashboardMetric;
   total_subscribers: DashboardMetric;
-  win_rate: DashboardMetric;
+  total_batches: DashboardMetric;
   monthly_revenue: DashboardMetric;
 }
 
 export interface AnalystProfile {
+  username?: string;
   name: string;
-  avatar_url?: string;
+  profile_pic_url?: string;
   bio?: string;
   twitter_url?: string;
   linkedin_url?: string;
+  website?: string;
   email?: string;
   // SEBI / analyst-specific fields returned by the user-service
   state?: string;

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Topbar } from "@/components/dashboard/topbar";
 import { useAnalystProfile } from "@/hooks/use-analyst-dashboard";
 import { useDashboard } from "@/components/dashboard/dashboard-context";
@@ -49,6 +50,21 @@ export default function ProfilePage() {
   const [twitterUrl, setTwitterUrl] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [username, setUsername] = useState("");
+  const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "available" | "taken">("idle");
+  const isUsernameSet = Boolean(profile?.username);
+
+  // Debounce username checking
+  useEffect(() => {
+    if (!username || username === profile?.username) {
+      setUsernameStatus("idle");
+      return;
+    }
+    const timer = setTimeout(() => {
+      checkUsernameAvailability(username);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [username, profile?.username]);
 
   // Sync state with SWR mock profile when fetched
   useEffect(() => {
@@ -60,7 +76,9 @@ export default function ProfilePage() {
       setBio(profile.bio || "");
       setTwitterUrl(profile.twitter_url || "");
       setLinkedinUrl(profile.linkedin_url || "");
-      setAvatarUrl(profile.avatar_url || "");
+      setAvatarUrl(profile.profile_pic_url || "");
+      setUsername(profile.username || "");
+      setUsernameStatus("idle");
       /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [profile]);
@@ -74,7 +92,32 @@ export default function ProfilePage() {
       setBio(profile.bio || "");
       setTwitterUrl(profile.twitter_url || "");
       setLinkedinUrl(profile.linkedin_url || "");
-      setAvatarUrl(profile.avatar_url || "");
+      setAvatarUrl(profile.profile_pic_url || "");
+      setUsername(profile.username || "");
+      setUsernameStatus("idle");
+    }
+  };
+
+  const checkUsernameAvailability = async (value: string) => {
+    if (!value) {
+      setUsernameStatus("idle");
+      return;
+    }
+    if (value === profile?.username) {
+      setUsernameStatus("available");
+      return;
+    }
+    setUsernameStatus("checking");
+    try {
+      const res = await fetch(`/api/public/analysts/check-username?username=${value}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUsernameStatus(data.available ? "available" : "taken");
+      } else {
+        setUsernameStatus("idle");
+      }
+    } catch {
+      setUsernameStatus("idle");
     }
   };
 
@@ -96,10 +139,11 @@ export default function ProfilePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: updatedName,
+          username: username.trim() || undefined,
           bio: bio.trim(),
           twitter_url: twitterUrl.trim(),
           linkedin_url: linkedinUrl.trim(),
-          avatar_url: avatarUrl,
+          profile_pic_url: avatarUrl || undefined,
         }),
       });
 
@@ -275,6 +319,51 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
+                {/* Username */}
+                <div>
+                  <label
+                    htmlFor="username"
+                    className="text-[12.5px] font-bold text-slate-700 mb-1.5 flex items-center justify-between"
+                  >
+                    <span>Unique Username</span>
+                    {usernameStatus === "checking" && <span className="text-slate-400 font-normal">Checking...</span>}
+                    {usernameStatus === "available" && <span className="text-green-500 font-normal">Available</span>}
+                    {usernameStatus === "taken" && <span className="text-red-500 font-normal">Taken</span>}
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-3 text-slate-400 text-[13.5px]">stoxify.in/profiles/</span>
+                    <input
+                      id="username"
+                      type="text"
+                      value={username}
+                      disabled={isUsernameSet}
+                      onChange={(e) => {
+                        setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]+/g, ""));
+                        setUsernameStatus("idle");
+                      }}
+                      className={`w-full pl-[135px] pr-3 py-2 border rounded-lg text-[13.5px] text-slate-800 placeholder-slate-400 focus:outline-none transition-colors shadow-sm ${
+                        isUsernameSet
+                          ? "bg-slate-50 text-slate-500 cursor-not-allowed"
+                          : usernameStatus === "taken"
+                          ? "border-red-300 focus:border-red-500 text-red-600 bg-red-50"
+                          : usernameStatus === "available"
+                          ? "border-green-300 focus:border-green-500 text-green-700 bg-green-50"
+                          : "border-slate-200 focus:border-[var(--brand)]"
+                      }`}
+                      placeholder="username"
+                    />
+                  </div>
+                  {isUsernameSet ? (
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Your unique username has been permanently claimed.
+                    </span>
+                  ) : (
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Choose a unique username to claim your public profile URL.
+                    </span>
+                  )}
+                </div>
+
                 {/* Email Address */}
                 <div>
                   <label
@@ -349,6 +438,48 @@ export default function ProfilePage() {
                       placeholder="https://linkedin.com/in/..."
                     />
                   </div>
+                </div>
+
+                {/* Public Landing Page */}
+                <div className="mt-2">
+                  <label className="text-[12.5px] font-bold text-slate-700 mb-1.5 block">
+                    Public Landing Page
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={username ? `stoxify.in/profiles/${username}` : "Set a username above to claim your link"}
+                      readOnly
+                      className="w-full px-3 py-2 border border-slate-200 bg-[#f8fafc] rounded-lg text-[13.5px] text-slate-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => {
+                        const savedUsername = profile?.username;
+                        if (savedUsername) {
+                          navigator.clipboard.writeText(`stoxify.in/profiles/${savedUsername}`);
+                          showSuccessToast("Link Copied", "Your landing page link has been copied to clipboard.");
+                        } else {
+                          showSuccessToast("Error", "Please set and save a unique username first.");
+                        }
+                      }}
+                      className="px-4 py-2 border border-slate-200 rounded-lg text-[12.5px] font-bold text-slate-700 bg-white hover:bg-slate-50 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+                      type="button"
+                    >
+                      Copy Link
+                    </button>
+                    {profile?.username && (
+                      <Link
+                        href={`/profiles/${profile.username}`}
+                        target="_blank"
+                        className="px-4 py-2 border border-transparent rounded-lg text-[12.5px] font-bold text-white bg-[var(--brand)] hover:bg-[var(--brand-dark)] transition-colors shadow-sm cursor-pointer whitespace-nowrap"
+                      >
+                        Visit Page
+                      </Link>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-slate-400 mt-1 block">
+                    Share this unique link with potential subscribers to showcase your profile and plans.
+                  </span>
                 </div>
 
                 <hr className="border-slate-100 mt-2" />

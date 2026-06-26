@@ -344,7 +344,7 @@ export default function ManageBatchesPage({ params }: { params: Promise<{ plan_i
                                 </>
                               )}
                             </div>
-                            <p className="text-[12px] text-slate-500 mt-1">{batch.plan_type === 'SUBSCRIPTION' ? 'Subscription Plan' : 'Lifetime Access'}</p>
+                            <p className="text-[12px] text-slate-500 mt-1">{batch.plan_type === 'SUBSCRIPTION' ? 'Batch' : 'Lifetime Access'}</p>
                           </div>
                         </div>
 

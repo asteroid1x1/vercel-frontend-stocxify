@@ -5,7 +5,7 @@ interface MetricCardProps {
   value: string;
   icon: IconName;
   changePct?: number;
-  changeLabel: string;
+  changeLabel?: string;
   /** Optional second line below the change e.g. "+1 Today" */
   subNote?: string;
 }

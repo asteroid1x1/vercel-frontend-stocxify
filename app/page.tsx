@@ -75,7 +75,7 @@ const features: Array<{
     icon: "listChecks",
     iconWrap: "bg-[rgba(139,92,246,0.08)]",
     iconColor: "text-[#6D28D9]",
-    title: "Flexible Subscription Plans",
+    title: "Flexible Batches",
     description:
       "Each analyst sets their own pricing. Subscribe monthly or annually. Cancel anytime. Mix and match multiple analysts to suit your trading style.",
     delay: 4,

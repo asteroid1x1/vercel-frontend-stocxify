@@ -380,7 +380,7 @@ export default function AnalystDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 items-start">
           
-          {/* Subscription Plans (Left Column) */}
+          {/* Batches (Left Column) */}
           <section className="flex flex-col gap-5">
             <div className="flex items-center gap-3 mb-2">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">

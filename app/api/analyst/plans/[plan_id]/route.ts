@@ -7,7 +7,7 @@ import { userCookieNames } from "@/lib/auth/cookies";
 
 /**
  * GET /api/analyst/plans/[plan_id]
- * Fetches details of a single subscription plan.
+ * Fetches details of a single batch.
  */
 export async function GET(
   request: NextRequest,
@@ -46,7 +46,7 @@ export async function GET(
 
 /**
  * PATCH /api/analyst/plans/[plan_id]
- * Updates a subscription plan's details.
+ * Updates a batch's details.
  */
 export async function PATCH(
   request: NextRequest,

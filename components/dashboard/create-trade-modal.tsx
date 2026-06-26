@@ -54,14 +54,13 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
   const [tradeStructure, setTradeStructure] = useState<"SIMPLE" | "PAIR">("SIMPLE");
   const [segment, setSegment] = useState<"EQUITY" | "FNO">("EQUITY");
   const [position, setPosition] = useState<"LONG" | "SHORT">("LONG");
-  const [category, setCategory] = useState<"INTRADAY" | "SWING">("INTRADAY");
+  const [category, setCategory] = useState<"INTRADAY" | "SWING" | "POSITIONAL" | "SHORT_TERM" | "MEDIUM_TERM" | "LONG_TERM">("INTRADAY");
   const [entryPrice, setEntryPrice] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [stopLoss, setStopLoss] = useState("");
   const [notes, setNotes] = useState("");
-  const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+  const [selectedBatch, setSelectedBatch] = useState<string>("");
   const [selectedPlanId, setSelectedPlanId] = useState("");
-  const [showBatchDropdown, setShowBatchDropdown] = useState(false);
   const [expiry, setExpiry] = useState("");
   const [strikePrice, setStrikePrice] = useState("");
   const [optionType, setOptionType] = useState<"CE" | "PE" | "">("");
@@ -129,9 +128,6 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
     function handleClickOutside(event: MouseEvent) {
       if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
         setShowAutocomplete(false);
-      }
-      if (batchDropdownRef.current && !batchDropdownRef.current.contains(event.target as Node)) {
-        setShowBatchDropdown(false);
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
@@ -322,7 +318,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
       stop_loss: sl,
       target: target,
       target_note: notes.trim() || undefined,
-      batch: selectedBatches.length > 0 ? selectedBatches : undefined,
+      batch: selectedBatch || undefined,
       plan_id: selectedPlanId || undefined,
       expiry: expiry || undefined,
       strike_price: strikePrice ? parseFloat(strikePrice) : undefined,
@@ -565,7 +561,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                 <label className="block text-[11.5px] font-bold text-[var(--muted)] uppercase tracking-[0.05em] mb-1.5">
                   Segment
                 </label>
-                <div className="flex bg-[var(--surface)] p-1 rounded-lg border border-[var(--line)]">
+                <div className={`flex bg-[var(--surface)] p-1 rounded-lg border border-[var(--line)] ${isSymbolSelected ? "opacity-75 cursor-not-allowed" : ""}`}>
                   <button
                     className={`flex-1 py-1.5 text-center text-[12px] font-bold rounded-md transition-all ${
                       segment === "EQUITY"
@@ -574,6 +570,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                     }`}
                     onClick={() => setSegment("EQUITY")}
                     type="button"
+                    disabled={isSymbolSelected}
                   >
                     Equity
                   </button>
@@ -585,6 +582,7 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                     }`}
                     onClick={() => setSegment("FNO")}
                     type="button"
+                    disabled={isSymbolSelected}
                   >
                     FnO
                   </button>
@@ -705,11 +703,15 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
                 <div className="relative">
                   <select
                     className="w-full appearance-none rounded-lg border border-[var(--line)] bg-white py-2 px-3.5 text-[12.5px] font-medium text-[var(--ink)] transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
-                    onChange={(e) => setCategory(e.target.value as "INTRADAY" | "SWING")}
+                    onChange={(e) => setCategory(e.target.value as any)}
                     value={category}
                   >
                     <option value="INTRADAY">Intraday</option>
                     <option value="SWING">Swing</option>
+                    <option value="POSITIONAL">Positional</option>
+                    <option value="SHORT_TERM">Short-Term</option>
+                    <option value="MEDIUM_TERM">Medium Term</option>
+                    <option value="LONG_TERM">Long-Term</option>
                   </select>
                   <Icon
                     className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-2)] pointer-events-none h-3 w-3"
@@ -719,102 +721,37 @@ export function CreateTradeModal({ onClose, onSuccess }: CreateTradeModalProps) 
               </div>
             </div>
 
-            {/* Batch Multi-Select */}
+            {/* Batch Selection */}
             <div>
               <label className="block text-[11.5px] font-bold text-[var(--muted)] uppercase tracking-[0.05em] mb-1.5">
                 Batch
               </label>
-              <div className="relative" ref={batchDropdownRef}>
-                {/* Trigger button */}
-                <button
-                  type="button"
-                  className="w-full flex items-center flex-wrap gap-1.5 min-h-[38px] rounded-lg border border-[var(--line)] bg-white py-1.5 px-3 text-[12.5px] font-medium text-[var(--ink)] transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--brand)] text-left"
-                  onClick={() => setShowBatchDropdown((v) => !v)}
+              <div className="relative">
+                <select
+                  className="w-full appearance-none rounded-lg border border-[var(--line)] bg-white py-2 px-3.5 text-[12.5px] font-medium text-[var(--ink)] transition-colors focus:outline-none focus:ring-1 focus:ring-[var(--brand)]"
+                  value={selectedPlanId}
+                  onChange={(e) => {
+                    const pId = e.target.value;
+                    setSelectedPlanId(pId);
+                    if (pId) {
+                      const selectedPlan = plans.find((p) => p.plan_id === pId);
+                      setSelectedBatch(selectedPlan?.name || "");
+                    } else {
+                      setSelectedBatch("");
+                    }
+                  }}
                 >
-                  {selectedBatches.length === 0 ? (
-                    <span className="text-[var(--muted-2)]">Select batches…</span>
-                  ) : (
-                    selectedBatches.map((bName) => (
-                      <span
-                        key={bName}
-                        className="inline-flex items-center gap-1 bg-[var(--brand)]/10 text-[var(--brand)] text-[11px] font-bold px-2 py-0.5 rounded-md"
-                      >
-                        {bName}
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          className="cursor-pointer hover:text-[var(--red)] transition-colors ml-0.5"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedBatches((prev) => prev.filter((b) => b !== bName));
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" || e.key === " ") {
-                              e.stopPropagation();
-                              setSelectedBatches((prev) => prev.filter((b) => b !== bName));
-                            }
-                          }}
-                        >
-                          <Icon name="x" className="h-2.5 w-2.5" />
-                        </span>
-                      </span>
-                    ))
-                  )}
-                  <Icon
-                    className="ml-auto shrink-0 text-[var(--muted-2)] h-3 w-3"
-                    name="chevronDown"
-                  />
-                </button>
-
-                {/* Dropdown */}
-                {showBatchDropdown && (
-                  <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-[100] max-h-52 overflow-y-auto rounded-lg border border-[var(--line)] bg-white py-1 shadow-lg animate-[fadeIn_0.15s_ease-out]">
-                    {plans.flatMap((p) =>
-                      (p.batches || []).map((b) => {
-                        const isChecked = selectedBatches.includes(b.name);
-                        return (
-                          <button
-                            key={b.batch_id}
-                            type="button"
-                            className={`w-full px-3.5 py-2 text-left text-[12.5px] font-medium transition-colors flex items-center gap-2.5 ${
-                              isChecked
-                                ? "bg-[var(--brand)]/5 text-[var(--brand)]"
-                                : "text-[var(--ink)] hover:bg-[var(--surface)]"
-                            }`}
-                            onClick={() => {
-                              setSelectedBatches((prev) =>
-                                isChecked
-                                  ? prev.filter((x) => x !== b.name)
-                                  : [...prev, b.name]
-                              );
-                            }}
-                          >
-                            <span
-                              className={`flex items-center justify-center h-4 w-4 rounded border transition-colors ${
-                                isChecked
-                                  ? "bg-[var(--brand)] border-[var(--brand)]"
-                                  : "border-[var(--line)] bg-white"
-                              }`}
-                            >
-                              {isChecked && (
-                                <Icon name="check" className="h-2.5 w-2.5 text-white" />
-                              )}
-                            </span>
-                            <span className="flex-1">{b.name}</span>
-                            <span className="text-[10px] font-bold text-[var(--muted)] bg-[var(--surface)] px-1.5 py-0.5 rounded">
-                              {p.name}
-                            </span>
-                          </button>
-                        );
-                      })
-                    )}
-                    {plans.flatMap((p) => p.batches || []).length === 0 && (
-                      <div className="px-4 py-3 text-center text-[12px] text-[var(--muted-2)]">
-                        No batches available
-                      </div>
-                    )}
-                  </div>
-                )}
+                  <option value="">Select a batch...</option>
+                  {plans.map((p) => (
+                    <option key={p.plan_id} value={p.plan_id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <Icon
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--muted-2)] pointer-events-none h-3 w-3"
+                  name="chevronDown"
+                />
               </div>
             </div>
 

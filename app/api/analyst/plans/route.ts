@@ -7,7 +7,7 @@ import { userCookieNames } from "@/lib/auth/cookies";
 import { decodeJwtPayload } from "@/lib/auth/server-session";
 
 /**
- * GET /api/analyst/plans — List the authenticated analyst's own subscription plans.
+ * GET /api/analyst/plans — List the authenticated analyst's own batches.
  * Passes analyst_id as a query param derived from the JWT (plan-service uses it
  * to scope results to the caller's own plans when they match).
  */
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 }
 
 /**
- * POST /api/analyst/plans — Create a new subscription plan.
+ * POST /api/analyst/plans — Create a new batch.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const csrfRejection = rejectCrossOriginPost(request);

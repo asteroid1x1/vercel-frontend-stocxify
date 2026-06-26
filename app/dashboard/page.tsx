@@ -292,11 +292,9 @@ export default function DashboardPage() {
                 value={metrics.total_subscribers.value.toLocaleString("en-IN")}
               />
               <MetricCard
-                changePct={metrics.win_rate.change_pct}
-                changeLabel="improvement"
-                icon="target"
-                label="Win Rate"
-                value={`${metrics.win_rate.value}%`}
+                icon="folder"
+                label="Total Batches"
+                value={String(metrics.total_batches.value)}
               />
               <MetricCard
                 changePct={metrics.monthly_revenue.change_pct}

@@ -17,43 +17,6 @@ import type { Trade } from "@/lib/types/analyst";
 
 type TabId = "active" | "pending" | "closed";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-/** Formats a number in Indian locale: 2940.50 → "₹2,940.50" */
-function inr(value: number | undefined | null, decimals = 2): string {
-  if (value == null) return "—";
-  return `₹${value.toLocaleString("en-IN", { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
-}
-
-/** Formats a creation timestamp to a human-readable time e.g. "09:45 AM" or "Yesterday, 02:45 PM" */
-function formatCreatedTime(isoDate: string): string {
-  const d = new Date(isoDate);
-  const now = new Date();
-  const isToday = d.toDateString() === now.toDateString();
-  const timeStr = d.toLocaleTimeString("en-IN", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
-  return isToday ? timeStr : `Yesterday, ${timeStr}`;
-}
-
-/** Color class for direction/subtype badges */
-function directionBadgeClass(dir: string): string {
-  if (dir === "LONG" || dir === "BUY")
-    return "bg-[var(--green-light)] text-[var(--green)] border border-[var(--green)]/20";
-  if (dir === "SHORT" || dir === "SELL")
-    return "bg-[var(--red-light)] text-[var(--red)] border border-[var(--red)]/20";
-  return "bg-[var(--brand-light)] text-[var(--brand)] border border-[var(--brand)]/20";
-}
-
-function subtypeBadgeClass(sub: string): string {
-  if (sub === "INTRADAY") return "bg-[#fff7e6] text-[#d97706] border border-[#d97706]/20";
-  if (sub === "POSITIONAL") return "bg-[#f3f0ff] text-[#7c3aed] border border-[#7c3aed]/20";
-  // SWING
-  return "bg-[#e8f4ff] text-[#2563eb] border border-[#2563eb]/20";
-}
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 /** Mini stat card in the 4-stat strip at top */
@@ -90,7 +53,7 @@ function StatStripSkeleton() {
 }
 
 /** Full trade card matching the Figma exactly */
-function TradeCard({ trade, onBroadcast }: { trade: Trade; onBroadcast: (trade: Trade) => void }) {
+function TradeCard({ trade, onBroadcast, hideActions }: { trade: Trade; onBroadcast: (trade: Trade) => void; hideActions?: boolean }) {
   const { openCloseTrade, openModifyTrade, showSuccessToast } = useDashboard();
   
   // Simulated real-time price states
@@ -139,26 +102,19 @@ function TradeCard({ trade, onBroadcast }: { trade: Trade; onBroadcast: (trade: 
     ? trade.entry_price - liveLtp
     : liveLtp - trade.entry_price;
   const livePnlPct = (livePnlPerUnit / trade.entry_price) * 100;
-  const pnlUp = livePnlPerUnit >= 0;
 
   // Near SL/Target conditions
   const isTargetHit = targetVal !== undefined && (!isShort ? liveLtp >= targetVal : liveLtp <= targetVal);
   const isSLHit = stopLossVal !== undefined && (!isShort ? liveLtp <= stopLossVal : liveLtp >= stopLossVal);
-  const isNearSL = !isSLHit && !isTargetHit && stopLossVal !== undefined && (
-    !isShort
-      ? (liveLtp > stopLossVal && liveLtp <= stopLossVal * 1.015)
-      : (liveLtp < stopLossVal && liveLtp >= stopLossVal * 0.985)
-  );
 
-  // R:R calculation
-  let rrRatioStr = "—";
-  if (trade.entry_price && stopLossVal !== undefined && targetVal !== undefined) {
-    const risk = Math.abs(trade.entry_price - stopLossVal);
-    const reward = Math.abs(targetVal - trade.entry_price);
-    if (risk > 0) {
-      rrRatioStr = `1 : ${(reward / risk).toFixed(1)}`;
-    }
-  }
+  // Timeline Progress Calculation
+  const range = (targetVal && stopLossVal) ? Math.abs(targetVal - stopLossVal) : 0;
+  const entryPct = (targetVal && stopLossVal && range !== 0) 
+    ? Math.min(100, Math.max(0, (!isShort ? ((trade.entry_price - stopLossVal) / range) : ((stopLossVal - trade.entry_price) / range)) * 100)) 
+    : 50;
+  const livePct = (targetVal && stopLossVal && range !== 0) 
+    ? Math.min(100, Math.max(0, (!isShort ? ((liveLtp - stopLossVal) / range) : ((stopLossVal - liveLtp) / range)) * 100)) 
+    : 50;
 
   const handleToggleNote = () => {
     const nextState = !isNotePublic;
@@ -170,257 +126,186 @@ function TradeCard({ trade, onBroadcast }: { trade: Trade; onBroadcast: (trade: 
   };
 
   return (
-    <div className={`rounded-xl border bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)] overflow-hidden transition-all duration-300 ${isNearSL ? "border-amber-500/40 ring-4 ring-amber-500/5 shadow-[0_4px_16px_rgba(217,119,6,0.08)]" : "border-[var(--line)]"}`}>
-      {/* ── Card Header: symbol + badges + live indicator ── */}
-      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-[var(--line)] flex-wrap">
-        {/* Symbol */}
-        <span className="text-[14px] font-extrabold tracking-tight text-[var(--ink)]">
-          {trade.symbol}
-        </span>
-
-        {/* Segment label */}
-        <span className="text-[11px] font-semibold text-[var(--muted-2)]">
-          {trade.segment_label ?? trade.segment}
-        </span>
-
-        {/* Direction badge: LONG / SHORT / BUY / SELL */}
-        <span
-          className={`inline-flex items-center rounded px-2 py-0.5 text-[10.5px] font-bold uppercase ${directionBadgeClass(trade.direction)}`}
-        >
-          {trade.direction}
-        </span>
-
-        {/* Subtype badge: SWING / INTRADAY / POSITIONAL */}
-        {trade.trade_subtype && (
-          <span
-            className={`inline-flex items-center rounded px-2 py-0.5 text-[10.5px] font-bold uppercase ${subtypeBadgeClass(trade.trade_subtype)}`}
-          >
-            {trade.trade_subtype}
-          </span>
-        )}
-
-        {/* Batch badge */}
-        {trade.batch && (
-          <span
-            className="inline-flex items-center rounded px-2 py-0.5 text-[10.5px] font-bold uppercase bg-[#f8fafc] text-[#475569] border border-[#cbd5e1]/50"
-          >
-            {trade.batch}
-          </span>
-        )}
-
-        {/* R:R Ratio Badge */}
-        {rrRatioStr !== "—" && (
-          <span className="inline-flex items-center rounded px-2 py-0.5 text-[10.5px] font-bold bg-[#f0f9ff] text-[#0369a1] border border-[#0369a1]/20">
-            R:R {rrRatioStr}
-          </span>
-        )}
-
-        {/* Live warnings & Target badges */}
-        {isTargetHit && (
-          <span className="inline-flex items-center gap-1 rounded bg-[var(--green-light)] text-[var(--green)] px-2 py-0.5 text-[10.5px] font-bold border border-[var(--green)]/20 animate-pulse">
-            Target Hit! 🎉
-          </span>
-        )}
-        {isSLHit && (
-          <span className="inline-flex items-center gap-1 rounded bg-[var(--red-light)] text-[var(--red)] px-2 py-0.5 text-[10.5px] font-bold border border-[var(--red)]/20 animate-pulse">
-            SL Hit! 🚨
-          </span>
-        )}
-        {!isTargetHit && !isSLHit && isNearSL && (
-          <span className="inline-flex items-center gap-1 rounded bg-amber-50 text-amber-700 px-2 py-0.5 text-[10.5px] font-bold border border-amber-500/20 animate-pulse">
-            Near SL ⚠️
-          </span>
-        )}
-
-        <div className="flex-1" />
-
-        {/* Created time */}
-        <span className="text-[11px] text-[var(--muted-2)]">
-          Created: {trade.created_at ? formatCreatedTime(trade.created_at) : "—"}
-        </span>
-
-        {/* Live streaming indicator */}
-        {trade.is_live_streaming === true && (
-          <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[var(--green)]">
-            {/* Pulsing dot */}
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--green)] opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--green)]" />
+    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm relative mt-4 overflow-visible flex flex-col">
+      {/* Top Badges */}
+      <div className="flex justify-between items-start px-4">
+        <div className="bg-[#cc9900] text-white px-3 py-1 rounded-b-md rounded-t-sm text-xs font-bold flex items-center gap-1.5 shadow-sm -mt-px">
+          <div className="flex gap-0.5 items-end h-3">
+            <div className="w-1 bg-white/90 h-full rounded-sm" />
+            <div className="w-1 bg-white/90 h-2/3 rounded-sm" />
+          </div>
+          Analyst Signal
+        </div>
+        <div className="flex gap-2 -mt-px">
+          {trade.trade_subtype && (
+            <span className="bg-[#ffcc00] text-gray-900 px-3 py-1 rounded-b-md rounded-t-sm text-xs font-bold shadow-sm">
+              {trade.trade_subtype}
             </span>
-            Live Streaming
+          )}
+          <span className="bg-[#0066ff] text-white px-3 py-1 rounded-b-md rounded-t-sm text-xs font-bold shadow-sm">
+            {trade.segment}
           </span>
-        )}
+        </div>
       </div>
 
-      {/* ── Card Body: 5-column price grid ── */}
-      <div className="grid grid-cols-5 gap-0 px-5 py-4 max-[900px]:grid-cols-2 max-[900px]:gap-4">
-        {/* Col 1: Entry Price */}
-        <div>
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.07em] text-[var(--muted-2)]">
-            Entry Price
-          </div>
-          <div className="text-[15px] font-bold text-[var(--ink)]">{inr(trade.entry_price)}</div>
-          {trade.zone && (
-            <div className="mt-0.5 text-[11px] text-[var(--muted-2)]">Zone: {trade.zone}</div>
-          )}
-          {!trade.zone && (
-            <div className="mt-0.5 text-[11px] text-[var(--muted-2)]">Fixed Entry</div>
-          )}
-        </div>
-
-        {/* Col 2: Live CMP */}
-        <div>
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.07em] text-[var(--muted-2)]">
-            Live CMP
-          </div>
-          <div
-            className={`inline-block px-1.5 py-0.5 rounded text-[15px] font-extrabold transition-all duration-700 ${
-              priceDirection === "up"
-                ? "bg-emerald-50 text-[var(--green)]"
-                : priceDirection === "down"
-                  ? "bg-rose-50 text-[var(--red)]"
-                  : liveLtp >= trade.entry_price
-                    ? "text-[var(--green)]"
-                    : "text-[var(--red)]"
-            }`}
-          >
-            {inr(liveLtp)}
-          </div>
-          <div
-            className={`mt-0.5 text-[11px] font-semibold transition-colors duration-500 ${
-              livePnlPct >= 0 ? "text-[var(--green)]" : "text-[var(--red)]"
-            }`}
-          >
-            {livePnlPct >= 0 ? "+" : ""}
-            {livePnlPct.toFixed(2)}%
-          </div>
-        </div>
-
-        {/* Col 3: Stop Loss */}
-        <div>
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.07em] text-[var(--muted-2)]">
-            Stop Loss
-          </div>
-          <div
-            className={`inline-block px-1.5 py-0.5 rounded text-[15px] font-bold transition-all duration-300 ${
-              isNearSL
-                ? "bg-amber-50 text-amber-700 border border-amber-500/20"
-                : "text-[var(--ink)]"
-            }`}
-          >
-            {inr(stopLossVal)}
-          </div>
-          {trade.risk_pct !== undefined && (
-            <div className="mt-0.5 text-[11px] text-[var(--muted-2)]">
-              Risk: {trade.risk_pct.toFixed(1)}%
+      <div className="p-5 flex-1">
+        {/* Symbol Row */}
+        <div className="flex justify-between items-start mb-10">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center bg-blue-50 text-xl font-bold text-blue-500 overflow-hidden shrink-0 shadow-inner">
+              {trade.symbol.charAt(0)}
             </div>
-          )}
-        </div>
-
-        {/* Col 4: Targets */}
-        <div>
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.07em] text-[var(--muted-2)]">
-            Targets
-          </div>
-          <div className="text-[15px] font-bold text-[var(--ink)]">
-            {inr(targetVal, 0)}
-            {trade.target_2_price && <> / {inr(trade.target_2_price, 0)}</>}
-          </div>
-          {(trade.reward_pct !== undefined || trade.reward_2_pct !== undefined) && (
-            <div className="mt-0.5 text-[11px] text-[var(--muted-2)]">
-              Reward: {trade.reward_pct?.toFixed(1)}%
-              {trade.reward_2_pct !== undefined && ` / ${trade.reward_2_pct.toFixed(1)}%`}
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-gray-900 leading-none">{trade.symbol}</h3>
+                <span className="text-[10px] font-bold border border-gray-200 rounded-full px-1.5 py-0.5 text-gray-500 flex items-center gap-1 leading-none shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500" /> NSE
+                </span>
+              </div>
+              <p className="text-xs text-gray-500 mt-1">{trade.segment_label ?? trade.segment}</p>
             </div>
-          )}
+          </div>
+
+          <div className="text-right">
+            <div className={`text-xl font-extrabold text-gray-900 transition-colors duration-300 ${priceDirection === 'up' ? 'text-green-600' : priceDirection === 'down' ? 'text-red-600' : ''}`}>
+              ₹{liveLtp.toFixed(2)}
+            </div>
+            <div className={`text-sm font-bold mt-1 ${livePnlPerUnit >= 0 ? 'text-green-600' : 'text-red-500'}`}>
+              <span>
+                {livePnlPerUnit >= 0 ? '+' : '-'}₹{Math.abs(livePnlPerUnit).toFixed(2)} ({livePnlPerUnit >= 0 ? '+' : ''}{livePnlPct.toFixed(2)}%)
+              </span>
+            </div>
+          </div>
         </div>
 
-        {/* Col 5: PNL Status */}
-        <div className="border-l border-[var(--line)] pl-5 max-[900px]:border-0 max-[900px]:pl-0">
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.07em] text-[var(--muted-2)]">
-            PNL Status
-          </div>
-          {livePnlPerUnit !== undefined ? (
-            <>
-              <div
-                className={`text-[15px] font-bold ${pnlUp ? "text-[var(--green)]" : "text-[var(--red)]"}`}
-              >
-                {pnlUp ? "+" : "-"}₹{Math.abs(livePnlPerUnit).toFixed(2)} /{" "}
-                {trade.pnl_unit ?? "share"}
-              </div>
-              {/* Bidirectional progress bar centered at 50% */}
-              <div className="relative mt-2.5 h-1.5 w-full rounded-full bg-[var(--line)] overflow-hidden">
-                {/* Midpoint divider */}
-                <div className="absolute left-1/2 top-0 z-10 h-full w-[1.5px] bg-[var(--ink)]/20" />
-                {pnlUp ? (
-                  <div
-                    className="absolute left-1/2 h-full bg-[var(--green)] rounded-r-full transition-all duration-500"
-                    style={{ width: `${Math.min(livePnlPct * 4, 50)}%` }}
-                  />
-                ) : (
-                  <div
-                    className="absolute right-1/2 h-full bg-[var(--red)] rounded-l-full transition-all duration-500"
-                    style={{ width: `${Math.min(Math.abs(livePnlPct) * 4, 50)}%` }}
-                  />
-                )}
-              </div>
-            </>
+        {/* Progress Slider / Timeline */}
+        <div className="relative h-1 mb-14 mt-6 mx-2">
+          {/* Base line */}
+          {stopLossVal && targetVal ? (
+            <div className="absolute inset-0 w-full h-full rounded-full overflow-hidden">
+              <div className="absolute inset-y-0 left-0 h-full bg-red-500" style={{ width: `${entryPct}%` }} />
+              <div className="absolute inset-y-0 right-0 h-full bg-green-500" style={{ width: `${100 - entryPct}%`, left: `${entryPct}%` }} />
+            </div>
           ) : (
-            <div className="text-[13px] text-[var(--muted-2)]">Pending</div>
+            <div className="absolute inset-0 w-full h-full rounded-full bg-gray-200" />
           )}
+
+          {/* SL Node */}
+          {stopLossVal && (
+            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-black rounded-full shadow-sm" style={{ left: '0%' }}>
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-[13px] font-bold text-gray-900">SL</div>
+            </div>
+          )}
+
+          {/* Entry Node */}
+          <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-black rounded-full shadow-sm" style={{ left: `${entryPct}%` }}>
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 flex flex-col items-center">
+              <span className="text-[13px] font-bold text-gray-900">Entry</span>
+              <span className="text-[11px] font-medium text-gray-500 mt-1 whitespace-nowrap">
+                {trade.created_at ? new Date(trade.created_at).toLocaleDateString("en-IN", { day: '2-digit', month: 'short' }) : "—"}
+              </span>
+              <span className="text-[11px] font-medium text-gray-500 whitespace-nowrap">
+                {trade.created_at ? new Date(trade.created_at).toLocaleTimeString("en-IN", { hour: '2-digit', minute: '2-digit', hour12: true }) : ""}
+              </span>
+            </div>
+          </div>
+
+          {/* Target Node */}
+          {targetVal && (
+            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-black rounded-full shadow-sm" style={{ left: '100%' }}>
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 text-[13px] font-bold text-gray-900">Target</div>
+            </div>
+          )}
+
+          {/* Live Price Marker */}
+          {stopLossVal && targetVal && (
+            <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center transition-all duration-700 ease-in-out" style={{ left: `${livePct}%` }}>
+              <div className="bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-lg mb-2 absolute bottom-full shadow-md whitespace-nowrap">
+                Live
+              </div>
+              <div className="w-4 h-4 rounded-full border-2 border-red-600 bg-white/40 ring-4 ring-white shadow-sm" />
+            </div>
+          )}
+        </div>
+
+        {/* Stats Row 1: Potential Profit and Status */}
+        <div className="bg-[#f8faf9] rounded-xl p-4 flex justify-between border border-gray-100 mb-4 shadow-sm">
+          <div>
+            <div className="text-[13px] font-medium text-gray-500 mb-1">Potential Profit</div>
+            <div className="text-green-600 font-bold text-base">
+              {targetVal ? `+${(Math.abs(targetVal - trade.entry_price) / trade.entry_price * 100).toFixed(2)}%` : "—"}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="text-[13px] font-medium text-gray-500 mb-1">Status</div>
+            <div className={`font-bold text-base ${isTargetHit ? 'text-green-600' : isSLHit ? 'text-red-600' : Math.abs(liveLtp - trade.entry_price) / trade.entry_price < 0.005 ? 'text-green-600' : livePnlPerUnit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              {isTargetHit ? "Target Hit" : isSLHit ? "SL Hit" : Math.abs(liveLtp - trade.entry_price) / trade.entry_price < 0.005 ? "In Buying Range" : livePnlPerUnit >= 0 ? "In Profit" : "In Loss"}
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Row 2: Entry, SL, Target */}
+        <div className="border border-gray-200 rounded-xl p-4 flex justify-between shadow-sm">
+          <div className="text-center flex-1">
+            <div className="text-[13px] font-medium text-gray-500 mb-1">Entry</div>
+            <div className="font-bold text-base text-gray-900">₹{trade.entry_price.toFixed(2)}</div>
+          </div>
+          <div className="w-px bg-gray-200 mx-2"></div>
+          <div className="text-center flex-1">
+            <div className="text-[13px] font-medium text-gray-500 mb-1">Stop Loss</div>
+            <div className="font-bold text-base text-gray-900">{stopLossVal ? `₹${stopLossVal.toFixed(2)}` : '—'}</div>
+          </div>
+          <div className="w-px bg-gray-200 mx-2"></div>
+          <div className="text-center flex-1">
+            <div className="text-[13px] font-medium text-gray-500 mb-1">Target</div>
+            <div className="font-bold text-base text-gray-900">{targetVal ? `₹${targetVal.toFixed(2)}` : '—'}</div>
+          </div>
         </div>
       </div>
 
-      {/* ── Card Footer: analyst note + action buttons ── */}
-      <div className="flex items-center gap-4 border-t border-[var(--line)] px-5 py-3 max-[860px]:flex-col max-[860px]:items-start">
-        {/* Analyst note with eye/visibility switch */}
-        <div className="flex flex-1 items-center gap-3 text-[12.5px] min-w-0">
+      {/* Card Footer: action buttons */}
+      <div className="flex items-center gap-4 border-t border-gray-100 bg-gray-50/50 px-5 py-4 mt-auto max-[860px]:flex-col max-[860px]:items-stretch">
+        <div className="flex flex-1 items-center gap-3 text-sm min-w-0">
           <button
             onClick={handleToggleNote}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold border transition-all ${
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
               isNotePublic
-                ? "bg-[var(--brand-light)] text-[var(--brand)] border-[var(--brand)]/20 hover:bg-[var(--brand-light)]/80"
-                : "bg-[var(--surface)] text-[var(--muted-2)] border-[var(--line)] hover:bg-[var(--line)]"
+                ? "bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100"
+                : "bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200"
             }`}
             type="button"
             title={isNotePublic ? "Public note - visible to subscribers" : "Private note - hidden from subscribers"}
           >
-            <Icon className="h-3.5 w-3.5" name={isNotePublic ? "eye" : "eyeOff"} />
-            <span>{isNotePublic ? "Public" : "Private"}</span>
+            <Icon className="h-4 w-4" name={isNotePublic ? "eye" : "eyeOff"} />
+            <span>{isNotePublic ? "Public Note" : "Private Note"}</span>
           </button>
-          
-          <span className="truncate text-[var(--muted)]">
-            {trade.note ? (
-              <span className="font-semibold text-[var(--ink)]">Note: <span className="font-medium text-[var(--muted)]">{trade.note}</span></span>
-            ) : (
-              <span className="italic text-[var(--muted-2)]">No note added</span>
-            )}
-          </span>
         </div>
 
-        {/* Action buttons */}
-        <div className="flex shrink-0 items-center gap-2">
-          <button
-            className="rounded-lg border border-[var(--line)] px-3.5 py-1.5 text-[12px] font-semibold text-[var(--ink)] transition-colors hover:border-[var(--brand)]/40 hover:bg-[var(--brand-light)] hover:text-[var(--brand)]"
-            type="button"
-            onClick={() => openModifyTrade(trade)}
-          >
-            Modify Trade
-          </button>
-          <button
-            className="rounded-lg border border-[var(--brand)]/30 bg-[var(--brand-light)] px-3.5 py-1.5 text-[12px] font-semibold text-[var(--brand)] transition-colors hover:bg-[var(--brand)] hover:text-white"
-            type="button"
-            onClick={() => onBroadcast(trade)}
-          >
-            Broadcast Message
-          </button>
-          <button
-            className="rounded-lg border border-[var(--red)]/30 bg-[var(--red-light)] px-3.5 py-1.5 text-[12px] font-semibold text-[var(--red)] transition-colors hover:bg-[var(--red)] hover:text-white"
-            type="button"
-            onClick={() => openCloseTrade(trade)}
-          >
-            Close Trade
-          </button>
-        </div>
+        {!hideActions && (
+          <div className="flex shrink-0 items-center justify-end gap-2 max-[860px]:justify-between w-full sm:w-auto">
+            <button
+              className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-xs font-bold text-gray-700 shadow-sm transition-colors hover:border-gray-300 hover:bg-gray-50"
+              type="button"
+              onClick={() => openModifyTrade(trade)}
+            >
+              Modify
+            </button>
+            <button
+              className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-600 shadow-sm transition-colors hover:bg-blue-100"
+              type="button"
+              onClick={() => onBroadcast(trade)}
+            >
+              Broadcast
+            </button>
+            <button
+              className="rounded-xl bg-red-600 px-6 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-700"
+              type="button"
+              onClick={() => openCloseTrade(trade)}
+            >
+              Close
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -456,52 +341,7 @@ function TradeCardSkeleton() {
   );
 }
 
-/** "Closed History" table row */
-function ClosedTradeRow({ trade }: { trade: Trade }) {
-  const pnlUp = (trade.pnl_per_unit ?? 0) >= 0;
-  return (
-    <tr className="border-b border-[var(--line)] last:border-0 hover:bg-[var(--surface)] transition-colors">
-      <td className="py-3.5 pl-5 text-[13px] font-bold text-[var(--ink)]">{trade.symbol}</td>
-      <td className="py-3.5 px-4">
-        <span
-          className={`inline-flex rounded px-2 py-0.5 text-[10.5px] font-bold ${directionBadgeClass(trade.direction)}`}
-        >
-          {trade.direction}
-        </span>
-      </td>
-      <td className="py-3.5 px-4 text-[13px] text-[var(--ink)]">{inr(trade.entry_price)}</td>
-      <td className="py-3.5 px-4 text-[13px] text-[var(--ink)]">{inr(trade.ltp)}</td>
-      <td className="py-3.5 px-4">
-        <span
-          className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${pnlUp ? "bg-[var(--green-light)] text-[var(--green)]" : "bg-[var(--red-light)] text-[var(--red)]"}`}
-        >
-          {pnlUp ? "+" : ""}
-          {trade.pnl_pct?.toFixed(2) ?? "0.00"}%
-        </span>
-      </td>
-      <td className="py-3.5 px-4 text-[11px] text-[var(--muted-2)]">
-        {trade.updated_at ? new Date(trade.updated_at).toLocaleDateString("en-IN") : "—"}
-      </td>
-      <td className="py-3.5 pr-5">
-        <span
-          className={`text-[11px] font-semibold ${
-            trade.status === "TARGET_HIT"
-              ? "text-[var(--green)]"
-              : trade.status === "SL_HIT"
-                ? "text-[var(--red)]"
-                : "text-[var(--muted)]"
-          }`}
-        >
-          {trade.status === "TARGET_HIT"
-            ? "Target Hit"
-            : trade.status === "SL_HIT"
-              ? "SL Hit"
-              : "Manually Closed"}
-        </span>
-      </td>
-    </tr>
-  );
-}
+
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -524,7 +364,7 @@ export default function LiveTradesPage() {
   const TAB_OPTIONS: { id: TabId; label: string; count?: number }[] = [
     { id: "active", label: "Active", count: activeTotal },
     { id: "pending", label: "Pending", count: pendingTotal },
-    { id: "closed", label: "Closed History" },
+    { id: "closed", label: "Closed Trades" },
   ];
 
   return (
@@ -669,50 +509,29 @@ export default function LiveTradesPage() {
           </div>
         )}
 
-        {/* CLOSED HISTORY TAB */}
+        {/* CLOSED TRADES TAB */}
         {activeTab === "closed" && (
-          <div className="overflow-hidden rounded-xl border border-[var(--line)] bg-white shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[var(--line)]">
-                  {["Symbol", "Direction", "Entry", "Exit CMP", "PNL", "Date", "Outcome"].map(
-                    (col) => (
-                      <th
-                        className="py-3 pl-5 pr-4 text-left text-[10.5px] font-bold uppercase tracking-[0.06em] text-[var(--muted-2)]"
-                        key={col}
-                      >
-                        {col}
-                      </th>
-                    )
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {closedLoading ? (
-                  <tr>
-                    <td
-                      className="px-5 py-8 text-center text-[13px] text-[var(--muted-2)]"
-                      colSpan={7}
-                    >
-                      Loading history…
-                    </td>
-                  </tr>
-                ) : closedTrades.length === 0 ? (
-                  <tr>
-                    <td className="px-5 py-12 text-center" colSpan={7}>
-                      <div className="text-[14px] font-semibold text-[var(--ink)]">
-                        No closed trades yet
-                      </div>
-                      <p className="mt-1 text-[12.5px] text-[var(--muted-2)]">
-                        Trades you close will appear here with their outcome.
-                      </p>
-                    </td>
-                  </tr>
-                ) : (
-                  closedTrades.map((trade) => <ClosedTradeRow key={trade.trade_id} trade={trade} />)
-                )}
-              </tbody>
-            </table>
+          <div className="space-y-4">
+            {closedLoading ? (
+              <>
+                <TradeCardSkeleton />
+                <TradeCardSkeleton />
+                <TradeCardSkeleton />
+              </>
+            ) : closedTrades.length === 0 ? (
+              <div className="rounded-xl border border-[var(--line)] bg-white p-12 text-center">
+                <div className="text-[14px] font-semibold text-[var(--ink)]">
+                  No closed trades yet
+                </div>
+                <p className="mt-1 text-[12.5px] text-[var(--muted-2)]">
+                  Trades you close will appear here with their outcome.
+                </p>
+              </div>
+            ) : (
+              closedTrades.map((trade) => (
+                <TradeCard key={trade.trade_id} trade={trade} onBroadcast={setBroadcastTrade} hideActions />
+              ))
+            )}
           </div>
         )}
       </div>

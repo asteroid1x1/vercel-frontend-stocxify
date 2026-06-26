@@ -70,14 +70,30 @@ export function Topbar({
 
         {/* When no custom actions and no user profile, show default Create Trade */}
         {!actions && !showUserProfile && (
-          <button
-            className="inline-flex items-center gap-2 rounded-lg bg-[var(--brand)] px-4 py-2 text-[13px] font-bold text-white transition-all hover:bg-[var(--brand-dark)] hover:shadow-md active:scale-[0.98]"
-            onClick={openCreateTrade}
-            type="button"
-          >
-            <Icon className="h-3.5 w-3.5" name="plus" />
-            Create Trade
-          </button>
+          <>
+            {profile?.username && (
+              <button
+                className="inline-flex items-center gap-2 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-[12.5px] font-bold text-[var(--ink)] transition-all hover:bg-[var(--surface)] hover:text-[var(--brand)] active:scale-[0.98]"
+                onClick={() => {
+                  navigator.clipboard.writeText(`stoxify.in/profiles/${profile.username}`);
+                  alert("Landing page link copied to clipboard!");
+                }}
+                type="button"
+                title="Copy Landing Page Link"
+              >
+                <Icon className="h-3.5 w-3.5" name="link" />
+                <span className="hidden sm:inline">Profile Link</span>
+              </button>
+            )}
+            <button
+              className="inline-flex items-center gap-2 rounded-lg bg-[var(--brand)] px-4 py-2 text-[13px] font-bold text-white transition-all hover:bg-[var(--brand-dark)] hover:shadow-md active:scale-[0.98]"
+              onClick={openCreateTrade}
+              type="button"
+            >
+              <Icon className="h-3.5 w-3.5" name="plus" />
+              Create Trade
+            </button>
+          </>
         )}
 
         {/* Notification bell */}
@@ -95,9 +111,9 @@ export function Topbar({
         {showUserProfile && (
           <div className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand)] text-[11px] font-extrabold text-white overflow-hidden">
-              {profile?.avatar_url ? (
+              {profile?.profile_pic_url ? (
                 <Image
-                  src={profile.avatar_url}
+                  src={profile.profile_pic_url}
                   alt={profile.name}
                   width={36}
                   height={36}

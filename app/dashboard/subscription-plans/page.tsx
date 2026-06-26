@@ -60,47 +60,7 @@ export default function SubscriptionPlansPage() {
   const { plans, isLoading: isPlansLoading, refetch: refetchPlans } = useSubscriptionPlans();
   const { stats, isLoading: isStatsLoading, refetch: refetchStats } = useSubscriptionPlansStats();
 
-  // Toggle Plan status (Activate/Deactivate)
-  const handleToggleStatus = async (planId: string, currentStatus: string, name: string) => {
-    const isActive = currentStatus === "ACTIVE";
-    const newIsActive = !isActive;
 
-    try {
-      const res = await fetch(`/api/analyst/plans/${planId}/status`, {
-        method: "PATCH",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_active: newIsActive }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        showSuccessToast(
-          "Toggle Failed",
-          err.error ?? `Could not ${newIsActive ? "activate" : "deactivate"} "${name}".`
-        );
-        return;
-      }
-
-      if (newIsActive) {
-        showSuccessToast(
-          "Plan Activated",
-          `"${name}" plan is now active and new subscribers can subscribe.`
-        );
-      } else {
-        showSuccessToast(
-          "Plan Deactivated",
-          `"${name}" plan has been deactivated. Current subscribers remain active.`
-        );
-      }
-    } catch {
-      showSuccessToast("Network Error", `Unable to update "${name}" plan status.`);
-    }
-
-    // Re-fetch plans and stats
-    refetchPlans();
-    refetchStats();
-  };
 
   const handleOpenCreateModal = () => {
     router.push("/dashboard/subscription-plans/create");
@@ -142,7 +102,7 @@ export default function SubscriptionPlansPage() {
               <MetricCard
                 changeLabel={`Out of ${stats.total_plans_count} total plans`}
                 icon="creditCard"
-                label="Active Plans"
+                label="Active Batches"
                 value={stats.active_plans_count.toString()}
               />
             </>
@@ -284,23 +244,11 @@ export default function SubscriptionPlansPage() {
                   {/* Actions Row */}
                   <div className="flex items-center gap-3 mt-6">
                     <button
-                      className="flex-1 flex items-center justify-center gap-1.5 rounded-xl border border-[var(--line)] bg-white py-2.5 text-[12.5px] font-bold text-[var(--ink)] hover:bg-[var(--surface)] hover:border-slate-300 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl border border-[var(--line)] bg-white py-2.5 text-[12.5px] font-bold text-[var(--ink)] hover:bg-[var(--surface)] hover:border-slate-300 shadow-sm transition-all active:scale-[0.98] cursor-pointer"
                       onClick={() => handleOpenEditModal(plan)}
                     >
                       <Icon className="h-3.5 w-3.5 text-[var(--muted-2)]" name="edit" />
                       <span>Edit Details</span>
-                    </button>
-
-                    <button
-                      className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl border py-2.5 text-[12.5px] font-bold shadow-sm transition-all active:scale-[0.98] cursor-pointer ${
-                        isActive
-                          ? "border-red-200 bg-red-50/50 text-red-600 hover:bg-red-50 hover:border-red-300"
-                          : "border-emerald-200 bg-emerald-50/50 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-300"
-                      }`}
-                      onClick={() => handleToggleStatus(plan.plan_id, plan.status, plan.name)}
-                    >
-                      <Icon className="h-3.5 w-3.5" name={isActive ? "ban" : "power"} />
-                      <span>{isActive ? "Deactivate" : "Activate"}</span>
                     </button>
                   </div>
                 </div>

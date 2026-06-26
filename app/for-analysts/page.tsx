@@ -59,7 +59,7 @@ const publishFeatures: FeatureBullet[] = [
     iconBg: "bg-[var(--green-light)]",
     iconColor: "text-[var(--green)]",
     title: "Branded profile page",
-    body: "A dedicated, professional profile with your photo, SEBI credentials, performance history, and subscription plans - all verified by Stoxify.",
+    body: "A dedicated, professional profile with your photo, SEBI credentials, performance history, and batches - all verified by Stoxify.",
   },
 ];
 
